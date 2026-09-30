@@ -1,7 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import {
   MapPin,
   Layers,
@@ -254,55 +252,42 @@ export const ACTIVE_CASES = [
   { id: 'act-5', name: 'Active UPI Mule Node #5', lat: 28.6330, lng: 77.2155, caseId: 'CT-3026-009', district: 'New Delhi' },
 ];
 
-// Helper to reliably load Google Maps with fallbacks
-const loadGoogleMapsAPI = async (apiKey) => {
-  if (window.google?.maps?.Map) {
-    return window.google;
-  }
-
-  if (window.__googleMapsLoadingPromise) {
-    return window.__googleMapsLoadingPromise;
-  }
-
-  window.__googleMapsLoadingPromise = new Promise(async (resolve, reject) => {
-    // Attempt 1: Modern setOptions + importLibrary
-    try {
-      setOptions({
-        key: apiKey,
-        v: 'weekly',
-      });
-      await importLibrary('maps');
-      await importLibrary('marker');
-      try {
-        await importLibrary('visualization');
-      } catch (vizErr) {
-        console.warn('Google Maps visualization optional module note:', vizErr);
-      }
-      if (window.google?.maps?.Map) {
-        resolve(window.google);
-        return;
-      }
-    } catch (e) {
-      console.warn('importLibrary fallback to direct script:', e);
+// Crash-proof zero-dependency Google Maps script loader
+const loadGoogleMapsScript = (apiKey) => {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined') {
+      resolve(null);
+      return;
     }
 
-    // Attempt 2: Direct script injection fallback
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=visualization,places`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
+    if (window.google?.maps?.Map) {
+      resolve(window.google);
+      return;
+    }
+
+    const existingScript = document.querySelector('script[data-gmaps-loader="true"]');
+    if (existingScript) {
       if (window.google?.maps?.Map) {
         resolve(window.google);
       } else {
-        reject(new Error('Google Maps script loaded without window.google.maps.Map'));
+        existingScript.addEventListener('load', () => resolve(window.google));
+        existingScript.addEventListener('error', () => resolve(null));
       }
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.setAttribute('data-gmaps-loader', 'true');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=visualization,places`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve(window.google);
+    script.onerror = () => {
+      console.warn('Google Maps script network load notice. Continuing with Leaflet OSM.');
+      resolve(null);
     };
-    script.onerror = (err) => reject(new Error('Failed to load Google Maps script tag'));
     document.head.appendChild(script);
   });
-
-  return window.__googleMapsLoadingPromise;
 };
 
 export default function IntelligenceMapCanvas({
@@ -351,9 +336,9 @@ export default function IntelligenceMapCanvas({
     setInternalEngine(target);
     if (onEngineChange) onEngineChange(target);
 
-    // Refresh size and pan upon visibility toggle
+    // Refresh size upon visibility toggle
     setTimeout(() => {
-      if (target === 'google' && googleMapInstance.current && window.google) {
+      if (target === 'google' && googleMapInstance.current && window.google?.maps?.event) {
         window.google.maps.event.trigger(googleMapInstance.current, 'resize');
         googleMapInstance.current.panTo({ lat: currentCoords.lat, lng: currentCoords.lng });
       } else if (target === 'leaflet' && leafletMapInstance.current) {
@@ -412,7 +397,7 @@ export default function IntelligenceMapCanvas({
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyASeiOhzKOyOOPditkIRxtsC8CPbuQ-dI4';
 
     try {
-      const google = await loadGoogleMapsAPI(apiKey);
+      const google = await loadGoogleMapsScript(apiKey);
       if (!googleContainerRef.current || !google?.maps?.Map) return;
 
       const mapType =
@@ -427,7 +412,7 @@ export default function IntelligenceMapCanvas({
         zoom: defaultCenter.zoom || 13,
         mapTypeId: mapType,
         disableDefaultUI: false,
-        zoomControl: false, // Custom controls used
+        zoomControl: false,
         streetViewControl: false,
         mapTypeControl: false,
         fullscreenControl: false,
@@ -475,7 +460,7 @@ export default function IntelligenceMapCanvas({
             <div style="font-size: 11px; color: #475569; margin-bottom: 8px;">${contentHtml}</div>
             ${
               spot
-                ? `<button id="btn-view-case-${spot.id}" style="width: 100%; padding: 6px 10px; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: background 0.2s;">
+                ? `<button id="btn-view-case-${spot.id}" style="width: 100%; padding: 6px 10px; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer;">
                     View Cases (${spot.relatedCases}) &rarr;
                   </button>`
                 : ''
@@ -515,7 +500,6 @@ export default function IntelligenceMapCanvas({
       // 2. Predicted Hotspots & Threat Rings
       if (layers.predicted) {
         visibleHotspots.forEach((spot) => {
-          // Heat Danger Buffer Zone Circle
           const circle = new google.maps.Circle({
             strokeColor: '#DC2626',
             strokeOpacity: 0.85,
@@ -528,7 +512,6 @@ export default function IntelligenceMapCanvas({
           });
           googleOverlays.current.circles.push(circle);
 
-          // Hotspot Marker Pin
           const marker = new google.maps.Marker({
             position: { lat: spot.lat, lng: spot.lng },
             map,
@@ -683,9 +666,9 @@ export default function IntelligenceMapCanvas({
 
       // 6. Threat Vector Routes
       const vectorCoords = [
-        { lat: 23.0300, lng: 72.5178 }, // Ahmedabad
-        { lat: 22.3107, lng: 73.1812 }, // Vadodara
-        { lat: 21.1702, lng: 72.8311 }, // Surat
+        { lat: 23.0300, lng: 72.5178 },
+        { lat: 22.3107, lng: 73.1812 },
+        { lat: 21.1702, lng: 72.8311 },
       ];
       const polyline = new google.maps.Polyline({
         path: vectorCoords,
@@ -701,55 +684,52 @@ export default function IntelligenceMapCanvas({
   );
 
   // -------------------------------------------------------------
-  // 2. LEAFLET ENGINE
+  // 2. LEAFLET ENGINE (With strict _leaflet_id protection)
   // -------------------------------------------------------------
   const initLeafletMap = useCallback(() => {
     if (!leafletContainerRef.current) return;
 
-    if (leafletMapInstance.current) {
-      if (leafletTileLayer.current) {
-        leafletMapInstance.current.removeLayer(leafletTileLayer.current);
+    // Safety: Reset any stale _leaflet_id to avoid "Map container is already initialized" crash
+    if (leafletContainerRef.current._leaflet_id) {
+      if (leafletMapInstance.current) {
+        try {
+          leafletMapInstance.current.remove();
+        } catch (e) {
+          // ignore cleanup err
+        }
+        leafletMapInstance.current = null;
       }
+      delete leafletContainerRef.current._leaflet_id;
+    }
+
+    try {
+      const map = L.map(leafletContainerRef.current, {
+        center: [defaultCenter.lat, defaultCenter.lng],
+        zoom: defaultCenter.zoom || 13,
+        zoomControl: false,
+      });
+
       const isSatellite = activeViewMode === 'Satellite View' || activeViewMode === '3D View';
       const tileUrl = isSatellite
         ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
         : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
       const tileAttr = isSatellite ? '&copy; Esri World Imagery' : '&copy; OpenStreetMap contributors';
-      const layer = L.tileLayer(tileUrl, { maxZoom: 19, attribution: tileAttr }).addTo(leafletMapInstance.current);
-      leafletTileLayer.current = layer;
+      const tileLayer = L.tileLayer(tileUrl, { maxZoom: 19, attribution: tileAttr }).addTo(map);
+      leafletTileLayer.current = tileLayer;
 
-      leafletMapInstance.current.invalidateSize();
-      if (leafletLayerGroup.current) {
-        renderLeafletLayers(leafletMapInstance.current, leafletLayerGroup.current);
-      }
-      return;
+      const layerGroup = L.layerGroup().addTo(map);
+      leafletLayerGroup.current = layerGroup;
+      leafletMapInstance.current = map;
+
+      map.on('mousemove', (e) => {
+        handleCoords(e.latlng.lat, e.latlng.lng);
+      });
+
+      renderLeafletLayers(map, layerGroup);
+    } catch (err) {
+      console.warn('Leaflet map initialization warning:', err);
     }
-
-    const map = L.map(leafletContainerRef.current, {
-      center: [defaultCenter.lat, defaultCenter.lng],
-      zoom: defaultCenter.zoom || 13,
-      zoomControl: false,
-    });
-
-    const isSatellite = activeViewMode === 'Satellite View' || activeViewMode === '3D View';
-    const tileUrl = isSatellite
-      ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-
-    const tileAttr = isSatellite ? '&copy; Esri World Imagery' : '&copy; OpenStreetMap contributors';
-    const tileLayer = L.tileLayer(tileUrl, { maxZoom: 19, attribution: tileAttr }).addTo(map);
-    leafletTileLayer.current = tileLayer;
-
-    const layerGroup = L.layerGroup().addTo(map);
-    leafletLayerGroup.current = layerGroup;
-    leafletMapInstance.current = map;
-
-    map.on('mousemove', (e) => {
-      handleCoords(e.latlng.lat, e.latlng.lng);
-    });
-
-    renderLeafletLayers(map, layerGroup);
   }, [activeViewMode, defaultCenter, handleCoords]);
 
   const renderLeafletLayers = useCallback(
@@ -896,10 +876,24 @@ export default function IntelligenceMapCanvas({
   // -------------------------------------------------------------
   // SYNC & REACTIVITY HOOKS
   // -------------------------------------------------------------
-  // Mount both engines on startup
+  // Mount both engines on startup with clean unmount handling
   useEffect(() => {
     initGoogleMap();
     initLeafletMap();
+
+    return () => {
+      if (leafletMapInstance.current) {
+        try {
+          leafletMapInstance.current.remove();
+        } catch (e) {
+          // ignore
+        }
+        leafletMapInstance.current = null;
+      }
+      if (leafletContainerRef.current?._leaflet_id) {
+        delete leafletContainerRef.current._leaflet_id;
+      }
+    };
   }, [initGoogleMap, initLeafletMap]);
 
   // Sync Layers & Overlays whenever layers or risk filter changes
@@ -929,9 +923,20 @@ export default function IntelligenceMapCanvas({
       renderGoogleOverlays(window.google, googleMapInstance.current);
     }
     if (leafletMapInstance.current) {
-      initLeafletMap();
+      if (leafletTileLayer.current) {
+        leafletMapInstance.current.removeLayer(leafletTileLayer.current);
+      }
+      const isSatellite = activeViewMode === 'Satellite View' || activeViewMode === '3D View';
+      const tileUrl = isSatellite
+        ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+      const tileAttr = isSatellite ? '&copy; Esri World Imagery' : '&copy; OpenStreetMap contributors';
+      const tileLayer = L.tileLayer(tileUrl, { maxZoom: 19, attribution: tileAttr }).addTo(leafletMapInstance.current);
+      leafletTileLayer.current = tileLayer;
+      leafletMapInstance.current.invalidateSize();
     }
-  }, [activeViewMode, initLeafletMap, renderGoogleOverlays]);
+  }, [activeViewMode, renderGoogleOverlays]);
 
   // Sync State / District pan & zoom on both maps
   useEffect(() => {
