@@ -278,7 +278,7 @@ const loadGoogleMapsScript = (apiKey) => {
 
     const script = document.createElement('script');
     script.setAttribute('data-gmaps-loader', 'true');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=visualization,places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
     script.async = true;
     script.defer = true;
     script.onload = () => resolve(window.google);
@@ -482,19 +482,35 @@ export default function IntelligenceMapCanvas({
         }
       };
 
-      // 1. Heatmap Layer on Google Maps
-      if (activeViewMode === 'Heatmap View' && google.maps.visualization?.HeatmapLayer && layers.predicted) {
-        const heatmapData = visibleHotspots.map((spot) => ({
-          location: new google.maps.LatLng(spot.lat, spot.lng),
-          weight: spot.riskScore,
-        }));
-        const heatmap = new google.maps.visualization.HeatmapLayer({
-          data: heatmapData,
-          map: map,
-          radius: 40,
-          opacity: 0.75,
+      // 1. High-Precision Thermal Heatmap Gradient (Fully compatible with Google Maps v3.65+)
+      if (activeViewMode === 'Heatmap View' && layers.predicted) {
+        visibleHotspots.forEach((spot) => {
+          // Outer thermal dissipation ring (amber)
+          const outerCircle = new google.maps.Circle({
+            strokeColor: '#F59E0B',
+            strokeOpacity: 0.35,
+            strokeWeight: 1,
+            fillColor: '#FBBF24',
+            fillOpacity: 0.12,
+            map,
+            center: { lat: spot.lat, lng: spot.lng },
+            radius: spot.radiusMeters * 1.6,
+          });
+          googleOverlays.current.circles.push(outerCircle);
+
+          // Mid-level thermal dispersion ring (orange)
+          const midCircle = new google.maps.Circle({
+            strokeColor: '#EA580C',
+            strokeOpacity: 0.5,
+            strokeWeight: 1.5,
+            fillColor: '#F97316',
+            fillOpacity: 0.22,
+            map,
+            center: { lat: spot.lat, lng: spot.lng },
+            radius: spot.radiusMeters * 1.15,
+          });
+          googleOverlays.current.circles.push(midCircle);
         });
-        googleOverlays.current.heatmap = heatmap;
       }
 
       // 2. Predicted Hotspots & Threat Rings
