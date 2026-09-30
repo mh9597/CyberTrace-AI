@@ -13,6 +13,7 @@ import {
   Compass,
 } from 'lucide-react';
 import { useCaseModal } from '../components/layout/Layout';
+import IntelligenceMapCanvas, { HOTSPOTS } from '../components/map/IntelligenceMapCanvas';
 
 export default function IntelligenceMap() {
   const { openCaseModal } = useCaseModal();
@@ -21,6 +22,8 @@ export default function IntelligenceMap() {
   const [selectedRisk, setSelectedRisk] = useState('All Levels');
   const [activeViewMode, setActiveViewMode] = useState('Heatmap View');
   const [showPopup, setShowPopup] = useState(true);
+  const [selectedHotspot, setSelectedHotspot] = useState(HOTSPOTS[0]);
+  const [coordsDisplay, setCoordsDisplay] = useState('23.0225° N, 72.5714° E');
 
   const [layers, setLayers] = useState({
     predicted: true,
@@ -195,120 +198,24 @@ export default function IntelligenceMap() {
 
         {/* Center: Large Interactive Map Canvas matching Panel 5 */}
         <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between min-h-[560px] relative overflow-hidden">
-          {/* Map Surface View */}
-          <div className="relative w-full h-[460px] rounded-xl bg-[#E8EEF5] border border-slate-200/80 overflow-hidden flex items-center justify-center">
-            {/* Visual GIS Vector Map / Street Grid */}
-            <svg
-              viewBox="0 0 800 500"
-              className="w-full h-full object-cover"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#D1D5DB" strokeWidth="0.5" opacity="0.4" />
-                </pattern>
-                {/* River / Road networks */}
-                <linearGradient id="riverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#93C5FD" />
-                  <stop offset="100%" stopColor="#60A5FA" />
-                </linearGradient>
-              </defs>
-
-              <rect width="800" height="500" fill="#F0F4F8" />
-              <rect width="800" height="500" fill="url(#grid)" />
-
-              {/* Sabarmati River curve */}
-              <path
-                d="M 420 0 Q 390 120 440 250 T 410 500"
-                fill="none"
-                stroke="url(#riverGrad)"
-                strokeWidth="16"
-                opacity="0.75"
-              />
-
-              {/* Main Highways / Arteries */}
-              <line x1="0" y1="200" x2="800" y2="280" stroke="#FFFFFF" strokeWidth="6" />
-              <line x1="0" y1="200" x2="800" y2="280" stroke="#CBD5E1" strokeWidth="2" strokeDasharray="6 4" />
-              <line x1="280" y1="0" x2="350" y2="500" stroke="#FFFFFF" strokeWidth="5" />
-              <line x1="560" y1="0" x2="480" y2="500" stroke="#FFFFFF" strokeWidth="4" />
-
-              {/* Concentric Danger Heat Rings radiating from Satellite (Ahmedabad) */}
-              {layers.predicted && (
-                <>
-                  <circle cx="320" cy="220" r="140" fill="#EF4444" fillOpacity="0.08" stroke="#EF4444" strokeOpacity="0.25" strokeWidth="1.5" />
-                  <circle cx="320" cy="220" r="95" fill="#F97316" fillOpacity="0.12" stroke="#F97316" strokeOpacity="0.4" strokeWidth="1.5" />
-                  <circle cx="320" cy="220" r="55" fill="#EF4444" fillOpacity="0.25" stroke="#EF4444" strokeOpacity="0.6" strokeWidth="2" />
-                  <circle cx="320" cy="220" r="16" fill="#DC2626" />
-                  <circle cx="320" cy="220" r="28" fill="none" stroke="#DC2626" strokeWidth="2" className="animate-ping" opacity="0.5" />
-                </>
-              )}
-
-              {/* Other Pins */}
-              {layers.historical && (
-                <>
-                  <circle cx="480" cy="180" r="8" fill="#2563EB" />
-                  <circle cx="210" cy="310" r="7" fill="#2563EB" />
-                </>
-              )}
-
-              {layers.atm && (
-                <>
-                  <circle cx="360" cy="240" r="6" fill="#F59E0B" />
-                  <circle cx="300" cy="170" r="6" fill="#F59E0B" />
-                  <circle cx="380" cy="280" r="6" fill="#F59E0B" />
-                </>
-              )}
-
-              {layers.active && (
-                <>
-                  <circle cx="290" cy="250" r="7" fill="#10B981" />
-                  <circle cx="450" cy="260" r="7" fill="#10B981" />
-                </>
-              )}
-            </svg>
-
-            {/* Popup Card matching Panel 5 */}
-            {showPopup && (
-              <div
-                className="absolute top-[28%] left-[40%] bg-white rounded-2xl shadow-xl border border-slate-200 p-4 w-64 z-20 animate-in fade-in zoom-in-95 duration-200"
-              >
-                <div className="flex items-start justify-between pb-2 border-b border-slate-100">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
-                    <h4 className="font-bold text-xs text-slate-900">Ahmedabad - Satellite</h4>
-                  </div>
-                  <button
-                    onClick={() => setShowPopup(false)}
-                    className="text-slate-400 hover:text-slate-600 text-xs"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="space-y-1.5 my-2.5 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Risk Score:</span>
-                    <span className="font-bold text-red-600">82%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Estimated Time:</span>
-                    <span className="font-semibold text-slate-800">10 AM – 2 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Related Cases:</span>
-                    <span className="font-semibold text-slate-800">5 Cases</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => openCaseModal('CT-3026-002')}
-                  className="w-full py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition"
-                >
-                  View Cases
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Real Interactive Map Canvas (Google Maps + GIS) */}
+          <IntelligenceMapCanvas
+            activeViewMode={activeViewMode}
+            layers={layers}
+            selectedState={selectedState}
+            selectedDistrict={selectedDistrict}
+            selectedRisk={selectedRisk}
+            selectedHotspot={selectedHotspot}
+            showPopup={showPopup}
+            setShowPopup={setShowPopup}
+            onSelectHotspot={(spot) => {
+              setSelectedHotspot(spot);
+              openCaseModal(spot.caseId || 'CT-3026-002');
+            }}
+            onCoordinatesChange={(lat, lng) => {
+              setCoordsDisplay(`${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E`);
+            }}
+          />
 
           {/* Bottom Map View Controls matching Panel 5 */}
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
@@ -329,7 +236,7 @@ export default function IntelligenceMap() {
             </div>
 
             <span className="text-xs text-slate-500 font-mono">
-              Coordinates: 23.0225° N, 72.5714° E
+              Coordinates: {coordsDisplay}
             </span>
           </div>
         </div>

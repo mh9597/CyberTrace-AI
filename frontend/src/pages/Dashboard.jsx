@@ -21,6 +21,7 @@ import {
   RECENT_ACTIVITIES,
 } from '../data/mockData';
 import { useCaseModal } from '../components/layout/Layout';
+import IntelligenceMapCanvas from '../components/map/IntelligenceMapCanvas';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -166,112 +167,12 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Interactive Simulated Threat Map Canvas */}
-          <div className="relative my-4 rounded-xl overflow-hidden bg-gradient-to-tr from-slate-50 via-blue-50/20 to-slate-100 border border-slate-100 h-[380px] flex items-center justify-center">
-            {/* Visual SVG Map of Gujarat/India Region */}
-            <svg
-              viewBox="0 0 700 400"
-              className="w-full h-full object-contain"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                {/* Radial Glow Filters for Heatmap */}
-                <radialGradient id="heatRed" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#EF4444" stopOpacity="0.85" />
-                  <stop offset="40%" stopColor="#F97316" stopOpacity="0.5" />
-                  <stop offset="70%" stopColor="#FBBF24" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
-                </radialGradient>
-
-                <radialGradient id="heatOrange" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#F97316" stopOpacity="0.8" />
-                  <stop offset="50%" stopColor="#FBBF24" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
-                </radialGradient>
-
-                <radialGradient id="heatYellow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#EAB308" stopOpacity="0.75" />
-                  <stop offset="60%" stopColor="#22C55E" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
-                </radialGradient>
-              </defs>
-
-              {/* State/Coast Outline Silhouette */}
-              <path
-                d="M150,120 Q200,90 260,110 T380,80 T460,110 T520,160 T480,240 T420,300 T340,340 T260,330 T200,280 T160,220 Z"
-                fill="#EFF6FF"
-                stroke="#BFDBFE"
-                strokeWidth="2"
-              />
-              <path
-                d="M220,160 Q280,140 330,170 T360,230 T320,280 T240,260 Z"
-                fill="#DBEAFE"
-                stroke="#93C5FD"
-                strokeWidth="1.5"
-                opacity="0.7"
-              />
-
-              {/* Heatmap Glow Circles */}
-              {/* Ahmedabad (Primary High-Risk Hotspot) */}
-              <circle cx="310" cy="180" r="90" fill="url(#heatRed)" />
-              <circle cx="310" cy="180" r="45" fill="url(#heatRed)" />
-              <circle cx="310" cy="180" r="8" fill="#DC2626" />
-              <circle cx="310" cy="180" r="24" fill="none" stroke="#EF4444" strokeWidth="2" strokeDasharray="3 3" className="animate-spin" />
-
-              {/* Vadodara */}
-              <circle cx="350" cy="220" r="60" fill="url(#heatOrange)" />
-              <circle cx="350" cy="220" r="6" fill="#EA580C" />
-
-              {/* Surat */}
-              <circle cx="340" cy="275" r="55" fill="url(#heatOrange)" />
-              <circle cx="340" cy="275" r="6" fill="#D97706" />
-
-              {/* Rajkot */}
-              <circle cx="230" cy="210" r="45" fill="url(#heatYellow)" />
-              <circle cx="230" cy="210" r="5" fill="#2563EB" />
-
-              {/* Mumbai */}
-              <circle cx="370" cy="330" r="45" fill="url(#heatYellow)" />
-              <circle cx="370" cy="330" r="5" fill="#4F46E5" />
-
-              {/* Connecting Intelligence Vectors */}
-              <line x1="310" y1="180" x2="350" y2="220" stroke="#EF4444" strokeWidth="1.5" strokeDasharray="4 2" />
-              <line x1="350" y1="220" x2="340" y2="275" stroke="#F97316" strokeWidth="1.5" strokeDasharray="4 2" />
-              <line x1="310" y1="180" x2="230" y2="210" stroke="#3B82F6" strokeWidth="1.5" strokeDasharray="4 2" />
-              <line x1="340" y1="275" x2="370" y2="330" stroke="#6366F1" strokeWidth="1.5" strokeDasharray="4 2" />
-            </svg>
-
-            {/* Floating marker tooltips */}
-            <div
-              onClick={() => openCaseModal('CT-3026-002')}
-              className="absolute top-[32%] left-[44%] -translate-x-1/2 -translate-y-full bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-lg border border-red-200 cursor-pointer hover:scale-105 transition-transform"
-            >
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
-                <span className="text-xs font-bold text-slate-900">Ahmedabad - Satellite</span>
-                <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.2 rounded-md">
-                  82%
-                </span>
-              </div>
-              <div className="text-[10px] text-slate-500 font-medium">Click for case details</div>
-            </div>
-
-            {/* Bottom Legend */}
-            <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200/80 text-[11px] flex items-center gap-4 text-slate-600 shadow-xs">
-              <span className="font-semibold text-slate-800">Intensity:</span>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-                <span>Critical (&gt;75%)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
-                <span>Elevated (50-75%)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                <span>Monitored (&lt;50%)</span>
-              </div>
-            </div>
+          {/* Interactive Threat Map Canvas (Google Maps + GIS) */}
+          <div className="relative my-4 rounded-xl overflow-hidden border border-slate-200/80 h-[380px]">
+            <IntelligenceMapCanvas
+              onSelectHotspot={(spot) => openCaseModal(spot.caseId || 'CT-3026-002')}
+              showPopup={true}
+            />
           </div>
         </div>
 
