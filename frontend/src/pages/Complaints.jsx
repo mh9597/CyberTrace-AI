@@ -1,358 +1,428 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
 import {
   Plus,
   Search,
   Filter,
-  FileSpreadsheet,
-  AlertCircle,
+  Download,
+  Calendar,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Activity,
   CheckCircle2,
-  Clock,
-  ExternalLink,
+  AlertTriangle,
+  X,
   Upload,
-  RefreshCw,
-  FolderOpen,
 } from 'lucide-react';
-import api from '../services/api';
-import GlassCard from '../components/common/GlassCard';
-import StatusBadge from '../components/common/StatusBadge';
-import ModalDialog from '../components/common/ModalDialog';
-import TransactionImportModal from '../features/complaints/TransactionImportModal';
+import { MOCK_COMPLAINTS, MOCK_STATS } from '../data/mockData';
+import { useCaseModal } from '../components/layout/Layout';
 
 export default function Complaints() {
-  const navigate = useNavigate();
-  const [complaints, setComplaints] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [importModalCase, setImportModalCase] = useState(null);
+  const { openCaseModal } = useCaseModal();
+  const [complaints, setComplaints] = useState(MOCK_COMPLAINTS);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState('All Types');
+  const [selectedStatus, setSelectedStatus] = useState('All Status');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showNewModal, setShowNewModal] = useState(false);
 
-  // New Complaint Form State
-  const [formData, setFormData] = useState({
-    complaint_id: `CT-2026-${Math.floor(100 + Math.random() * 900)}`,
-    victim_name: '',
-    victim_phone: '',
-    fraud_type: 'UPI/payment fraud',
+  // New complaint form state
+  const [newCase, setNewCase] = useState({
+    id: `CT-3026-00${complaints.length + 1}`,
+    complainant: '',
+    fraudType: 'UPI Fraud',
     amount: '',
-    transaction_reference: '',
-    notes: '',
+    date: '12 Oct 2026',
+    status: 'Open',
+    riskLevel: 'High',
   });
 
-  const loadComplaints = async () => {
-    try {
-      setLoading(true);
-      const params = {};
-      if (search) params.search = search;
-      if (statusFilter) params.status = statusFilter;
-      const res = await api.get('/complaints', { params });
-      setComplaints(res.data || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  const filteredComplaints = useMemo(() => {
+    return complaints.filter((c) => {
+      const matchSearch =
+        c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.complainant.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.fraudType.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchType =
+        selectedType === 'All Types' || c.fraudType === selectedType;
+
+      const matchStatus =
+        selectedStatus === 'All Status' || c.status === selectedStatus;
+
+      return matchSearch && matchType && matchStatus;
+    });
+  }, [complaints, searchTerm, selectedType, selectedStatus]);
+
+  const handleCreateComplaint = (e) => {
+    e.preventDefault();
+    if (!newCase.complainant || !newCase.amount) return;
+    const formattedCase = {
+      ...newCase,
+      amount: newCase.amount.startsWith('₹') ? newCase.amount : `₹${newCase.amount}`,
+    };
+    setComplaints([formattedCase, ...complaints]);
+    setShowNewModal(false);
+    setNewCase({
+      id: `CT-3026-00${complaints.length + 2}`,
+      complainant: '',
+      fraudType: 'UPI Fraud',
+      amount: '',
+      date: '12 Oct 2026',
+      status: 'Open',
+      riskLevel: 'High',
+    });
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'Investigating':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'Open':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'Pending':
+        return 'bg-orange-50 text-orange-700 border-orange-200';
+      case 'Closed':
+      case 'Resolved':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      default:
+        return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
 
-  useEffect(() => {
-    loadComplaints();
-  }, [statusFilter]);
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    loadComplaints();
-  };
-
-  const handleCreateComplaint = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post('/complaints', {
-        ...formData,
-        amount: parseFloat(formData.amount),
-      });
-      setShowModal(false);
-      setFormData({
-        complaint_id: `CT-2026-${Math.floor(100 + Math.random() * 900)}`,
-        victim_name: '',
-        victim_phone: '',
-        fraud_type: 'UPI/payment fraud',
-        amount: '',
-        transaction_reference: '',
-        notes: '',
-      });
-      loadComplaints();
-    } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to register complaint');
+  const getRiskBadge = (risk) => {
+    switch (risk) {
+      case 'High':
+        return 'bg-red-50 text-red-600 border-red-200 font-bold';
+      case 'Medium':
+        return 'bg-amber-50 text-amber-600 border-amber-200 font-medium';
+      case 'Low':
+        return 'bg-emerald-50 text-emerald-600 border-emerald-200 font-medium';
+      default:
+        return 'bg-slate-50 text-slate-600 border-slate-200';
     }
   };
-
-  const statusOptions = [
-    { label: 'All Cases', value: '' },
-    { label: 'New', value: 'New' },
-    { label: 'Under Analysis', value: 'Under Analysis' },
-    { label: 'Alert Generated', value: 'Alert Generated' },
-    { label: 'Under Investigation', value: 'Under Investigation' },
-    { label: 'Resolved', value: 'Resolved' },
-  ];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
+      {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
-            <FileSpreadsheet className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
-            <span>Cybercrime Case Repository</span>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            Complaints
           </h1>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-            Ingest, review, and correlate financial cybercrime complaints into investigative leads.
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Register new complaint, upload transaction data and manage cases
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => loadComplaints()}
-            title="Refresh"
-            className="p-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-xs dark:bg-slate-900 dark:hover:bg-slate-800 dark:text-slate-300 dark:border-slate-800 transition"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs shadow-sm dark:shadow-glow-cyan transition flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Register New Case</span>
-          </button>
+        <button
+          onClick={() => setShowNewModal(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition self-start sm:self-auto"
+        >
+          <Plus className="w-4 h-4" />
+          <span>New Complaint</span>
+        </button>
+      </div>
+
+      {/* 4 Mini KPI Cards matching Panel 3 */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+            <FileText className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xl font-bold text-slate-900">{MOCK_STATS.totalCases}</div>
+            <div className="text-xs text-slate-500 font-medium">Total Complaints</div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <Activity className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xl font-bold text-slate-900">{MOCK_STATS.activeInvestigations}</div>
+            <div className="text-xs text-slate-500 font-medium">Active Investigations</div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xl font-bold text-slate-900">{MOCK_STATS.closedCases}</div>
+            <div className="text-xs text-slate-500 font-medium">Closed Cases</div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xl font-bold text-slate-900">{MOCK_STATS.highRiskCases}</div>
+            <div className="text-xs text-slate-500 font-medium">High Risk Cases</div>
+          </div>
         </div>
       </div>
 
-      {/* Search & Filter Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs backdrop-blur-md transition-colors duration-200">
-        {/* Search Input */}
-        <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400 dark:text-slate-500" />
+      {/* Filter and Search Bar matching Panel 3 */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex-1 min-w-[240px] relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search by Case ID, reference, or fraud type..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-cyan-600 transition font-mono dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200 dark:focus:border-cyan-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by Case ID, Name, Type..."
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           />
-        </form>
+        </div>
 
-        {/* Status Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
-          {statusOptions.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setStatusFilter(opt.value)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${
-                statusFilter === opt.value
-                  ? 'bg-sky-100 text-cyan-950 border border-sky-300 font-semibold shadow-xs dark:bg-cyan-950 dark:text-cyan-300 dark:border-cyan-700/60'
-                  : 'bg-slate-100 hover:bg-slate-200/80 text-slate-600 border border-slate-200 dark:bg-slate-950/60 dark:text-slate-400 dark:hover:text-slate-200 dark:border-slate-800'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium focus:outline-none cursor-pointer"
+          >
+            <option>All Types</option>
+            <option>UPI Fraud</option>
+            <option>Investment Scam</option>
+            <option>Card Fraud</option>
+            <option>KYC Fraud</option>
+            <option>Trading Scam</option>
+          </select>
+
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium focus:outline-none cursor-pointer"
+          >
+            <option>All Status</option>
+            <option>Investigating</option>
+            <option>Open</option>
+            <option>Pending</option>
+            <option>Closed</option>
+            <option>Resolved</option>
+          </select>
+
+          <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600">
+            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <span>01 Oct - 12 Oct</span>
+          </div>
+
+          <button
+            onClick={() => alert('Exporting complaints registry as CSV...')}
+            className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-semibold text-slate-700 shadow-xs transition"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export</span>
+          </button>
         </div>
       </div>
 
-      {/* Main Complaints Table */}
-      <GlassCard className="p-0 overflow-hidden">
+      {/* Complaints Table matching Panel 3 */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-100 text-slate-600 uppercase text-[10px] font-mono border-b border-slate-200 dark:bg-slate-950/70 dark:text-slate-400 dark:border-slate-800/80">
+            <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-semibold uppercase text-[11px] tracking-wider">
               <tr>
-                <th className="py-3 px-6">Case Identifier</th>
-                <th className="py-3 px-4">Fraud Type</th>
-                <th className="py-3 px-4">Reported Amount</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">Tx Reference</th>
-                <th className="py-3 px-6 text-right">Actions</th>
+                <th className="py-3.5 px-4">Case ID</th>
+                <th className="py-3.5 px-4">Complainant</th>
+                <th className="py-3.5 px-4">Fraud Type</th>
+                <th className="py-3.5 px-4">Amount</th>
+                <th className="py-3.5 px-4">Date</th>
+                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4">Risk Level</th>
+                <th className="py-3.5 px-4 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
-              {loading ? (
-                <tr>
-                  <td colSpan="6" className="py-12 text-center text-slate-500 dark:text-slate-400 font-mono">
-                    Loading case registry...
+            <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+              {filteredComplaints.map((item) => (
+                <tr
+                  key={item.id}
+                  onClick={() => openCaseModal(item.id)}
+                  className="hover:bg-blue-50/40 transition cursor-pointer group"
+                >
+                  <td className="py-3.5 px-4 font-mono font-bold text-blue-600 group-hover:underline">
+                    {item.id}
+                  </td>
+                  <td className="py-3.5 px-4 font-semibold text-slate-900">
+                    {item.complainant}
+                  </td>
+                  <td className="py-3.5 px-4 text-slate-600">{item.fraudType}</td>
+                  <td className="py-3.5 px-4 font-bold text-slate-900">{item.amount}</td>
+                  <td className="py-3.5 px-4 text-slate-500">{item.date}</td>
+                  <td className="py-3.5 px-4">
+                    <span
+                      className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${getStatusBadge(
+                        item.status
+                      )}`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span
+                      className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] border ${getRiskBadge(
+                        item.riskLevel
+                      )}`}
+                    >
+                      {item.riskLevel}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-center">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openCaseModal(item.id);
+                      }}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition"
+                      title="View Details"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
-              ) : complaints.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="py-12 text-center text-slate-500 dark:text-slate-400">
-                    <FolderOpen className="w-8 h-8 text-slate-400 dark:text-slate-600 mx-auto mb-2" />
-                    <p className="font-semibold text-slate-700 dark:text-slate-300">No matching cases found</p>
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      Try clearing search parameters or registering a new complaint.
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                complaints.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-100/70 dark:hover:bg-slate-800/30 transition-colors group">
-                    <td className="py-3.5 px-6 font-mono font-bold text-cyan-700 dark:text-cyan-400">
-                      {c.complaint_id}
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300">{c.fraud_type}</td>
-                    <td className="py-3.5 px-4 font-mono font-bold text-slate-900 dark:text-white">
-                      ₹{c.amount?.toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <StatusBadge status={c.status} />
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-slate-500 dark:text-slate-400 text-[11px]">
-                      {c.transaction_reference || 'N/A'}
-                    </td>
-                    <td className="py-3.5 px-6 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => setImportModalCase(c.complaint_id)}
-                          title="Import Transaction Ledger"
-                          className="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-xs dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700 text-xs transition flex items-center gap-1"
-                        >
-                          <Upload className="w-3.5 h-3.5" />
-                          <span>Import</span>
-                        </button>
-                        <button
-                          onClick={() => navigate(`/complaints/${c.complaint_id}`)}
-                          className="px-2.5 py-1 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 dark:bg-cyan-950/80 dark:hover:bg-cyan-900 dark:text-cyan-300 dark:border-cyan-800/60 text-xs font-medium transition"
-                        >
-                          Dossier
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
         </div>
-      </GlassCard>
 
-      {/* Guided Case Registration Modal */}
-      <ModalDialog
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title="Register Cybercrime Complaint"
-        subtitle="Ingest initial victim report and initial transaction reference"
-        maxWidth="lg"
-      >
-        <form onSubmit={handleCreateComplaint} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">Case Identifier</label>
-              <input
-                type="text"
-                readOnly
-                value={formData.complaint_id}
-                className="w-full mt-1 px-3 py-2 bg-slate-100 border border-slate-300 rounded-xl text-xs font-mono text-cyan-700 font-bold dark:bg-slate-950 dark:border-slate-800 dark:text-cyan-400"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">Fraud Category</label>
-              <select
-                value={formData.fraud_type}
-                onChange={(e) => setFormData({ ...formData, fraud_type: e.target.value })}
-                className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-cyan-600 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200 dark:focus:border-cyan-500"
+        {/* Pagination matching Panel 3 */}
+        <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>Showing {filteredComplaints.length} of {complaints.length} cases</span>
+          <div className="flex items-center gap-1.5 font-medium">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="p-1.5 rounded-lg hover:bg-slate-100 disabled:opacity-40"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            {[1, 2, 3, 4, 5].map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`w-7 h-7 rounded-lg text-xs font-semibold ${
+                  currentPage === page
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
               >
-                <option value="UPI/payment fraud">UPI/payment fraud</option>
-                <option value="Credit Card Fraud">Credit Card Fraud</option>
-                <option value="Phishing">Phishing</option>
-                <option value="Identity Theft">Identity Theft</option>
-                <option value="Crypto Investment Fraud">Crypto Investment Fraud</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">Reported Amount (₹)</label>
-              <input
-                type="number"
-                required
-                placeholder="50000"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:border-cyan-600 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200 dark:focus:border-cyan-500"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">Initial Tx Reference</label>
-              <input
-                type="text"
-                placeholder="TXN-DEMO-001"
-                value={formData.transaction_reference}
-                onChange={(e) =>
-                  setFormData({ ...formData, transaction_reference: e.target.value })
-                }
-                className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:border-cyan-600 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200 dark:focus:border-cyan-500"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">Pseudonymized Complainant</label>
-              <input
-                type="text"
-                placeholder="Complainant #001"
-                value={formData.victim_name}
-                onChange={(e) => setFormData({ ...formData, victim_name: e.target.value })}
-                className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-cyan-600 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200 dark:focus:border-cyan-500"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">Complainant Phone (Masked)</label>
-              <input
-                type="text"
-                placeholder="+91-XXXXX-12345"
-                value={formData.victim_phone}
-                onChange={(e) => setFormData({ ...formData, victim_phone: e.target.value })}
-                className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:border-cyan-600 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200 dark:focus:border-cyan-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">Investigative Notes</label>
-            <textarea
-              rows="3"
-              placeholder="Initial intake details, reported timeline, and authorized scope..."
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-cyan-600 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200 dark:focus:border-cyan-500 resize-none"
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-3">
+                {page}
+              </button>
+            ))}
             <button
-              type="button"
-              onClick={() => setShowModal(false)}
-              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition"
+              onClick={() => setCurrentPage((p) => Math.min(5, p + 1))}
+              className="p-1.5 rounded-lg hover:bg-slate-100"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-sm dark:shadow-glow-cyan transition"
-            >
-              Commit Complaint
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-        </form>
-      </ModalDialog>
+        </div>
+      </div>
 
-      {/* CSV/JSON Import Modal */}
-      {importModalCase && (
-        <TransactionImportModal
-          isOpen={Boolean(importModalCase)}
-          onClose={() => setImportModalCase(null)}
-          complaintId={importModalCase}
-          onImportSuccess={loadComplaints}
-        />
+      {/* New Complaint Modal */}
+      {showNewModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-bold text-slate-900">Register New Complaint</h3>
+              <button
+                onClick={() => setShowNewModal(false)}
+                className="text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateComplaint} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1">
+                  Complainant Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Ramesh Chandra"
+                  value={newCase.complainant}
+                  onChange={(e) =>
+                    setNewCase({ ...newCase, complainant: e.target.value })
+                  }
+                  className="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">
+                    Fraud Category
+                  </label>
+                  <select
+                    value={newCase.fraudType}
+                    onChange={(e) =>
+                      setNewCase({ ...newCase, fraudType: e.target.value })
+                    }
+                    className="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                  >
+                    <option>UPI Fraud</option>
+                    <option>Investment Scam</option>
+                    <option>Card Fraud</option>
+                    <option>KYC Fraud</option>
+                    <option>Trading Scam</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">
+                    Amount (₹)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 1,50,000"
+                    value={newCase.amount}
+                    onChange={(e) =>
+                      setNewCase({ ...newCase, amount: e.target.value })
+                    }
+                    className="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1">
+                  Upload Evidence / Statement (CSV/PDF)
+                </label>
+                <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:bg-slate-50 cursor-pointer">
+                  <Upload className="w-5 h-5 text-slate-400 mx-auto mb-1" />
+                  <span className="text-[11px] text-slate-500">
+                    Click to attach bank statement or transaction logs
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowNewModal(false)}
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                >
+                  Save Complaint
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

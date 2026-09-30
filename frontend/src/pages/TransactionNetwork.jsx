@@ -1,312 +1,377 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState } from 'react';
 import {
   GitFork,
+  Maximize2,
+  ChevronDown,
+  ShieldAlert,
+  AlertTriangle,
+  Lock,
   ArrowRight,
-  ShieldCheck,
-  AlertCircle,
-  Layers,
-  Info,
-  Table,
+  Download,
+  Filter,
   Eye,
-  Radio,
-  ExternalLink,
+  FileText,
 } from 'lucide-react';
-import api from '../services/api';
-import GlassCard from '../components/common/GlassCard';
-import StatusBadge from '../components/common/StatusBadge';
-import EvidenceBadge from '../components/common/EvidenceBadge';
+import { NETWORK_NODES, MOCK_COMPLAINTS } from '../data/mockData';
 
 export default function TransactionNetwork() {
-  const [searchParams] = useSearchParams();
-  const caseIdParam = searchParams.get('caseId');
+  const [selectedCase, setSelectedCase] = useState('CT-3026-002');
+  const [selectedNode, setSelectedNode] = useState(NETWORK_NODES.center);
 
-  const [complaints, setComplaints] = useState([]);
-  const [selectedCaseId, setSelectedCaseId] = useState(caseIdParam || 'CT-2026-001');
-  const [networkData, setNetworkData] = useState(null);
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState('graph'); // 'graph' or 'table'
-
-  useEffect(() => {
-    async function loadCases() {
-      try {
-        const res = await api.get('/complaints');
-        setComplaints(res.data || []);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    loadCases();
-  }, []);
-
-  useEffect(() => {
-    async function loadNetwork() {
-      if (!selectedCaseId) return;
-      setLoading(true);
-      try {
-        const res = await api.get(`/complaints/${selectedCaseId}/network`);
-        setNetworkData(res.data);
-        if (res.data.nodes?.length > 0) {
-          setSelectedNode(res.data.nodes[0]);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadNetwork();
-  }, [selectedCaseId]);
+  // Center coordinate of canvas
+  const cx = 350;
+  const cy = 250;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Top Header matching Panel 6 */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
-            <GitFork className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
-            <span>Transaction Network & Mule Chain Intelligence</span>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            Transaction Network
           </h1>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-            Topological visualization of laundering hops, split transfers, and physical cash-out terminals.
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Visualize money trail and linked accounts
           </p>
         </div>
 
-        {/* Controls */}
         <div className="flex items-center gap-3">
-          {/* View Mode Toggle */}
-          <div className="p-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-1 shadow-xs">
-            <button
-              onClick={() => setViewMode('graph')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-                viewMode === 'graph'
-                  ? 'bg-cyan-600 text-white shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-              }`}
+          <div className="relative">
+            <select
+              value={selectedCase}
+              onChange={(e) => setSelectedCase(e.target.value)}
+              className="appearance-none bg-white border border-slate-200 rounded-xl px-3.5 py-2 pr-8 text-xs font-semibold text-slate-800 shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
             >
-              <GitFork className="w-3.5 h-3.5" />
-              <span>Topology</span>
-            </button>
-            <button
-              onClick={() => setViewMode('table')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-                viewMode === 'table'
-                  ? 'bg-cyan-600 text-white shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-              }`}
-            >
-              <Table className="w-3.5 h-3.5" />
-              <span>Accessible Table</span>
-            </button>
+              {MOCK_COMPLAINTS.map((c) => (
+                <option key={c.id} value={c.id}>
+                  Case: {c.id}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          {/* Case Selector */}
-          <select
-            value={selectedCaseId}
-            onChange={(e) => setSelectedCaseId(e.target.value)}
-            className="px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono font-semibold text-slate-800 focus:outline-none focus:border-cyan-600 shadow-xs dark:bg-slate-950 dark:border-slate-800 dark:text-cyan-300 dark:focus:border-cyan-500"
+          <button
+            onClick={() => alert('Expanded network topology view')}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
           >
-            {complaints.map((c) => (
-              <option key={c.id} value={c.complaint_id}>
-                {c.complaint_id} — {c.fraud_type}
-              </option>
-            ))}
-          </select>
+            <Maximize2 className="w-3.5 h-3.5" />
+            <span>Expand Network</span>
+          </button>
         </div>
       </div>
 
-      {loading ? (
-        <div className="text-center py-24 text-slate-500 dark:text-slate-400 font-mono text-xs">
-          Building topological network graph for {selectedCaseId}...
-        </div>
-      ) : networkData ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Visual or Tabular View (2 Cols) */}
-          <div className="lg:col-span-2 space-y-6">
-            <GlassCard
-              title={`Topological Mule Chain (Case ${selectedCaseId})`}
-              subtitle={`${networkData.nodes?.length || 0} Entities &bull; ${networkData.edges?.length || 0} Transfers`}
-              icon={GitFork}
-              action={
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-100 text-sky-900 border border-sky-300 font-semibold dark:bg-cyan-950 dark:text-cyan-300 dark:border-cyan-800/50">
-                  Directed Acyclic Graph
-                </span>
-              }
+      {/* Main Area: Canvas (Left 75%) + Account Details Panel (Right 25%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Network Canvas */}
+        <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col justify-between min-h-[560px] relative overflow-hidden">
+          {/* SVG Graph Canvas */}
+          <div className="relative w-full h-[460px] bg-gradient-to-b from-slate-50/50 to-white rounded-xl border border-slate-100 flex items-center justify-center">
+            <svg
+              viewBox="0 0 700 500"
+              className="w-full h-full"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              {viewMode === 'graph' ? (
-                <div className="py-6 px-4 bg-slate-50 dark:bg-slate-950/70 rounded-xl border border-slate-200 dark:border-slate-800/80 space-y-6 overflow-x-auto shadow-xs">
-                  <div className="flex items-center justify-between min-w-[620px] gap-4">
-                    {networkData.nodes.map((node, index) => {
-                      const isSelected = selectedNode?.id === node.id;
-                      const isCashOut = node.type === 'cash_out_atm';
-                      const isVictim = node.type === 'victim';
+              <defs>
+                <marker
+                  id="arrow-blue"
+                  viewBox="0 0 10 10"
+                  refX="18"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#3B82F6" />
+                </marker>
+                <marker
+                  id="arrow-purple"
+                  viewBox="0 0 10 10"
+                  refX="18"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#8B5CF6" />
+                </marker>
+                <marker
+                  id="arrow-green"
+                  viewBox="0 0 10 10"
+                  refX="18"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#10B981" />
+                </marker>
+                <marker
+                  id="arrow-orange"
+                  viewBox="0 0 10 10"
+                  refX="18"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#F97316" />
+                </marker>
 
-                      return (
-                        <React.Fragment key={node.id}>
-                          {/* Node Box */}
-                          <div
-                            onClick={() => setSelectedNode(node)}
-                            className={`p-4 rounded-xl cursor-pointer transition-all duration-200 border text-center shrink-0 w-44 select-none ${
-                              isSelected
-                                ? 'ring-2 ring-cyan-500 shadow-sm'
-                                : 'hover:border-slate-400 dark:hover:border-slate-600'
-                            } ${
-                              isCashOut
-                                ? 'bg-rose-50 border-rose-300 text-rose-900 shadow-xs dark:bg-rose-950/40 dark:border-rose-700/60 dark:text-rose-300'
-                                : isVictim
-                                ? 'bg-sky-50 border-sky-300 text-sky-900 shadow-xs dark:bg-cyan-950/40 dark:border-cyan-700/60 dark:text-cyan-300'
-                                : 'bg-white border-slate-200 text-slate-800 shadow-xs dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200'
-                            }`}
-                          >
-                            <div className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">
-                              {isVictim
-                                ? 'Origin Source'
-                                : isCashOut
-                                ? 'Cash-Out Point'
-                                : `Mule Hop L${node.hop_level || index}`}
-                            </div>
-                            <div className="text-xs font-bold font-mono mt-1 truncate text-slate-900 dark:text-white">
-                              {node.label || node.id}
-                            </div>
-                            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-                              {node.type}
-                            </div>
-                          </div>
+                {/* Pulsing Aura for Hub */}
+                <radialGradient id="hubHalo" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#EF4444" stopOpacity="0.4" />
+                  <stop offset="70%" stopColor="#EF4444" stopOpacity="0.1" />
+                  <stop offset="100%" stopColor="#EF4444" stopOpacity="0" />
+                </radialGradient>
+              </defs>
 
-                          {/* Edge Connector Arrow */}
-                          {index < networkData.nodes.length - 1 && (
-                            <div className="flex flex-col items-center justify-center shrink-0 px-1 text-slate-400 dark:text-slate-500">
-                              <ArrowRight className="w-5 h-5 text-cyan-600 dark:text-cyan-400 animate-pulse" />
-                              <span className="text-[9px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
-                                Hop {index + 1}
-                              </span>
-                            </div>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                /* Accessible Tabular Alternative (WCAG 2.2 AA) */
-                <div className="overflow-x-auto -mx-6">
-                  <table className="w-full text-left text-xs font-mono">
-                    <thead className="bg-slate-100 text-slate-600 uppercase text-[10px] border-b border-slate-200 dark:bg-slate-950 dark:text-slate-400 dark:border-slate-800">
-                      <tr>
-                        <th className="py-3 px-6">Entity ID</th>
-                        <th className="py-3 px-4">Entity Type</th>
-                        <th className="py-3 px-4">Hop Level</th>
-                        <th className="py-3 px-6 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
-                      {networkData.nodes.map((n) => (
-                        <tr key={n.id} className="hover:bg-slate-100/70 dark:hover:bg-slate-800/30 transition-colors">
-                          <td className="py-3 px-6 font-bold text-cyan-700 dark:text-cyan-300">{n.id}</td>
-                          <td className="py-3 px-4 text-slate-700 dark:text-slate-300">{n.type}</td>
-                          <td className="py-3 px-4 text-slate-500 dark:text-slate-400">Level {n.hop_level || 0}</td>
-                          <td className="py-3 px-6 text-right">
-                            <button
-                              onClick={() => setSelectedNode(n)}
-                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-xs dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-sans transition"
-                            >
-                              Inspect
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </GlassCard>
+              {/* Hub Outer Pulsing Circle */}
+              <circle cx={cx} cy={cy} r="65" fill="url(#hubHalo)" className="animate-pulse" />
 
-            {/* Transfer Edges Table */}
-            <GlassCard
-              title="Directed Fund Movement Edges"
-              subtitle="Documented transaction legs and provenance references"
-              icon={Layers}
-            >
-              <div className="overflow-x-auto -mx-6">
-                <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-slate-100 text-slate-600 uppercase text-[10px] border-b border-slate-200 dark:bg-slate-950 dark:text-slate-400 dark:border-slate-800">
-                    <tr>
-                      <th className="py-3 px-6">Source</th>
-                      <th className="py-3 px-4">Target</th>
-                      <th className="py-3 px-4">Amount</th>
-                      <th className="py-3 px-4">Reference</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
-                    {networkData.edges.map((e, idx) => (
-                      <tr key={idx} className="hover:bg-slate-100/70 dark:hover:bg-slate-800/30 transition-colors">
-                        <td className="py-3 px-6 text-cyan-700 dark:text-cyan-300 font-bold">{e.source}</td>
-                        <td className="py-3 px-4 text-slate-800 dark:text-slate-200">{e.target}</td>
-                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
-                          ₹{e.amount?.toLocaleString('en-IN')}
-                        </td>
-                        <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-[11px]">{e.reference || 'N/A'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {/* Connecting Lines with Directional Arrows */}
+              {NETWORK_NODES.connected.map((node) => {
+                const rad = (node.angle * Math.PI) / 180;
+                const nx = cx + node.dist * Math.cos(rad);
+                const ny = cy + node.dist * Math.sin(rad);
+
+                let marker = 'url(#arrow-blue)';
+                if (node.type === 'Related Case') marker = 'url(#arrow-purple)';
+                if (node.type === 'Beneficiary') marker = 'url(#arrow-green)';
+                if (node.type === 'Suspected Mule') marker = 'url(#arrow-orange)';
+
+                return (
+                  <g key={node.id}>
+                    <line
+                      x1={cx}
+                      y1={cy}
+                      x2={nx}
+                      y2={ny}
+                      stroke={node.color}
+                      strokeWidth="2"
+                      strokeDasharray="4 2"
+                      markerEnd={marker}
+                    />
+                  </g>
+                );
+              })}
+
+              {/* CENTER HUB NODE: Main Account matching Panel 6 */}
+              <g
+                className="cursor-pointer group"
+                onClick={() => setSelectedNode(NETWORK_NODES.center)}
+              >
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r="40"
+                  fill="#DC2626"
+                  className="transition-transform group-hover:scale-105"
+                  stroke="#FFFFFF"
+                  strokeWidth="3"
+                />
+                <circle cx={cx} cy={cy} r="48" fill="none" stroke="#EF4444" strokeWidth="1.5" strokeDasharray="3 3" />
+                <text
+                  x={cx}
+                  y={cy - 12}
+                  textAnchor="middle"
+                  fill="#FFFFFF"
+                  fontSize="10"
+                  fontWeight="bold"
+                >
+                  Main Account
+                </text>
+                <text
+                  x={cx}
+                  y={cy + 4}
+                  textAnchor="middle"
+                  fill="#FEE2E2"
+                  fontSize="9"
+                  fontFamily="monospace"
+                >
+                  A/c 112233
+                </text>
+                <text
+                  x={cx}
+                  y={cy + 18}
+                  textAnchor="middle"
+                  fill="#FEF08A"
+                  fontSize="8"
+                  fontWeight="bold"
+                >
+                  Risk: High
+                </text>
+              </g>
+
+              {/* RADIATING NODES matching Panel 6 */}
+              {NETWORK_NODES.connected.map((node) => {
+                const rad = (node.angle * Math.PI) / 180;
+                const nx = cx + node.dist * Math.cos(rad);
+                const ny = cy + node.dist * Math.sin(rad);
+
+                const isSelected = selectedNode.id === node.id;
+
+                return (
+                  <g
+                    key={node.id}
+                    className="cursor-pointer group"
+                    onClick={() =>
+                      setSelectedNode({
+                        ...node,
+                        fullAccount: `${node.account}XXXX`,
+                        totalAmount: node.amount,
+                        transactions: 12,
+                        linkedCases: 1,
+                        risk: node.type === 'Suspected Mule' ? 'High' : 'Medium',
+                      })
+                    }
+                  >
+                    <circle
+                      cx={nx}
+                      cy={ny}
+                      r={isSelected ? 30 : 25}
+                      fill={node.color}
+                      stroke="#FFFFFF"
+                      strokeWidth="2.5"
+                      className="transition-all group-hover:scale-110 shadow-sm"
+                    />
+                    <text
+                      x={nx}
+                      y={ny - 3}
+                      textAnchor="middle"
+                      fill="#FFFFFF"
+                      fontSize="9"
+                      fontFamily="monospace"
+                      fontWeight="bold"
+                    >
+                      {node.account.replace('A/c ', '')}
+                    </text>
+                    <text
+                      x={nx}
+                      y={ny + 9}
+                      textAnchor="middle"
+                      fill="#FFFFFF"
+                      fontSize="8"
+                      fontWeight="medium"
+                    >
+                      {node.amount}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+
+          {/* Bottom Legend matching Panel 6 */}
+          <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-red-600"></span>
+                <span className="font-medium">Main Account</span>
               </div>
-            </GlassCard>
-          </div>
-
-          {/* Node Inspector (1 Col) */}
-          <div className="space-y-6">
-            <GlassCard
-              title="Entity Inspector"
-              subtitle="Selected node telemetry and behavioral attributes"
-              icon={Eye}
-            >
-              {selectedNode ? (
-                <div className="space-y-4 text-xs">
-                  <div>
-                    <div className="text-[10px] uppercase font-mono text-slate-500 dark:text-slate-400 font-semibold">
-                      Entity Identifier
-                    </div>
-                    <div className="text-base font-bold font-mono text-slate-900 dark:text-white mt-1">
-                      {selectedNode.label || selectedNode.id}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 font-mono text-xs">
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 shadow-xs dark:bg-slate-950/70 dark:border-slate-800">
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Classification</div>
-                      <div className="font-bold text-cyan-700 dark:text-cyan-300 mt-0.5">{selectedNode.type}</div>
-                    </div>
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 shadow-xs dark:bg-slate-950/70 dark:border-slate-800">
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Hop Distance</div>
-                      <div className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                        Hop {selectedNode.hop_level || 0}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 dark:bg-slate-950/70 dark:border-slate-800 space-y-1.5 font-mono shadow-xs">
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">Risk Assessment</div>
-                    <div className="text-xs text-amber-800 dark:text-amber-300 font-semibold flex items-center gap-1.5">
-                      <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                      <span>{selectedNode.flags || 'Multi-Hop Rapid Split Fan-Out'}</span>
-                    </div>
-                  </div>
-
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
-                    Graph relationships represent documented transfers for officer review. They do not constitute autonomous proof of criminal intent.
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-12 text-slate-500 font-mono text-xs">
-                  Select any node in the graph above to inspect attributes.
-                </div>
-              )}
-            </GlassCard>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-blue-600"></span>
+                <span className="font-medium">Linked Account</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
+                <span className="font-medium">Beneficiary</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-orange-500"></span>
+                <span className="font-medium">Suspected Mule</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-purple-500"></span>
+                <span className="font-medium">Related Case</span>
+              </div>
+            </div>
+            <span className="text-[11px] text-slate-400 font-mono">
+              Graph Engine: NetworkX • Topology depth 2
+            </span>
           </div>
         </div>
-      ) : null}
+
+        {/* Right Panel: Account Details matching Panel 6 */}
+        <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-5">
+          <div className="pb-3 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              Account Details
+            </h3>
+            <span className="text-[11px] font-mono text-slate-500">
+              {selectedNode.type || 'Main Account'}
+            </span>
+          </div>
+
+          <div className="space-y-3 text-xs">
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span className="text-slate-500">Account Number</span>
+              <span className="font-mono font-bold text-slate-900">
+                {selectedNode.fullAccount || selectedNode.account || '112233XXXX'}
+              </span>
+            </div>
+
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span className="text-slate-500">Total Transactions</span>
+              <span className="font-bold text-slate-900">
+                {selectedNode.transactions || 42}
+              </span>
+            </div>
+
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span className="text-slate-500">Total Amount</span>
+              <span className="font-extrabold text-blue-600 text-sm">
+                {selectedNode.totalAmount || selectedNode.amount || '₹18,50,000'}
+              </span>
+            </div>
+
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span className="text-slate-500">Linked Cases</span>
+              <span className="font-bold text-slate-900">
+                {selectedNode.linkedCases || 3}
+              </span>
+            </div>
+
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span className="text-slate-500">Account Type</span>
+              <span className="font-semibold text-slate-800">
+                {selectedNode.type || 'Savings'}
+              </span>
+            </div>
+
+            <div className="flex justify-between py-2 border-b border-slate-100 items-center">
+              <span className="text-slate-500">Risk Level</span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-50 text-red-600 border border-red-200">
+                {selectedNode.risk || 'High'}
+              </span>
+            </div>
+          </div>
+
+          {/* Action Buttons matching Panel 6 */}
+          <div className="pt-2 space-y-2">
+            <button
+              onClick={() => alert(`Freeze notice issued for ${selectedNode.fullAccount || selectedNode.account}`)}
+              className="w-full py-2.5 px-4 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold shadow-xs transition"
+            >
+              Freeze Account
+            </button>
+
+            <button
+              onClick={() => alert(`Account flagged for STR/FIU audit`)}
+              className="w-full py-2.5 px-4 rounded-xl border border-amber-200 text-amber-700 hover:bg-amber-50 text-xs font-semibold shadow-xs transition"
+            >
+              Flag for Audit
+            </button>
+
+            <button
+              onClick={() => alert(`Opening transaction history ledger`)}
+              className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
+            >
+              View Transactions
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
