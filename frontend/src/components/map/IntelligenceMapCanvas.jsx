@@ -129,27 +129,25 @@ export default function IntelligenceMapCanvas({
   engine: propEngine,
   onEngineChange,
 }) {
-  const mapContainerRef = useRef(null);
+  // Separate DOM containers for Google Maps and Leaflet so they never conflict
+  const googleContainerRef = useRef(null);
+  const leafletContainerRef = useRef(null);
+
   const [internalEngine, setInternalEngine] = useState('google'); // 'google' | 'leaflet'
   const activeEngine = propEngine || internalEngine;
-  const [mapEngine, setMapEngine] = useState('loading'); // 'google' | 'leaflet' | 'loading'
-  const [engineLabel, setEngineLabel] = useState('Initializing Map...');
-  const [currentCoords, setCurrentCoords] = useState({ lat: 23.0225, lng: 72.5714 });
 
-  const handleEngineSwitch = (target) => {
-    setInternalEngine(target);
-    if (onEngineChange) onEngineChange(target);
-  };
+  const [googleStatus, setGoogleStatus] = useState('init'); // 'init' | 'ready' | 'embed_fallback'
+  const [engineLabel, setEngineLabel] = useState('Google Maps');
+  const [currentCoords, setCurrentCoords] = useState({ lat: 23.0300, lng: 72.5178 });
 
-  // References to keep instances alive
+  // Map references
   const googleMapInstance = useRef(null);
   const googleOverlays = useRef({ markers: [], circles: [], lines: [] });
   const leafletMapInstance = useRef(null);
   const leafletLayerGroup = useRef(null);
 
-  const defaultCenter = { lat: 23.0280, lng: 72.5200 }; // Centered on Ahmedabad - Satellite
+  const defaultCenter = { lat: 23.0300, lng: 72.5178 }; // Ahmedabad - Satellite Hub
 
-  // Notify parent on coords change
   const handleCoords = (lat, lng) => {
     setCurrentCoords({ lat, lng });
     if (onCoordinatesChange) {
@@ -157,199 +155,54 @@ export default function IntelligenceMapCanvas({
     }
   };
 
-  // -------------------------------------------------------------
-  // LEAFLET INITIALIZER (Robust Fallback / Direct GIS)
-  // -------------------------------------------------------------
-  const initLeafletMap = useCallback(() => {
-    if (!mapContainerRef.current) return;
+  const handleEngineSwitch = (target) => {
+    setInternalEngine(target);
+    if (onEngineChange) onEngineChange(target);
 
-    // Clean up Google Overlays if present
-    if (googleOverlays.current) {
-      googleOverlays.current.markers.forEach((m) => m.setMap(null));
-      googleOverlays.current.circles.forEach((c) => c.setMap(null));
-      googleOverlays.current.lines.forEach((l) => l.setMap(null));
-      googleOverlays.current = { markers: [], circles: [], lines: [] };
-    }
-    googleMapInstance.current = null;
-
-    // Clean up if already exists
-    if (leafletMapInstance.current) {
-      leafletMapInstance.current.remove();
-      leafletMapInstance.current = null;
-    }
-
-    // Clear container inner HTML if google maps or other remnants exist
-    mapContainerRef.current.innerHTML = '';
-
-    const map = L.map(mapContainerRef.current, {
-      center: [defaultCenter.lat, defaultCenter.lng],
-      zoom: 13,
-      zoomControl: false,
-    });
-
-    // Tiles selection based on view mode
-    const isSatellite = activeViewMode === 'Satellite View' || activeViewMode === '3D View';
-    const tileUrl = isSatellite
-      ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-
-    const tileAttr = isSatellite
-      ? '&copy; Esri World Imagery'
-      : '&copy; OpenStreetMap contributors';
-
-    L.tileLayer(tileUrl, {
-      maxZoom: 19,
-      attribution: tileAttr,
-    }).addTo(map);
-
-    const layerGroup = L.layerGroup().addTo(map);
-    leafletLayerGroup.current = layerGroup;
-    leafletMapInstance.current = map;
-
-    map.on('mousemove', (e) => {
-      handleCoords(e.latlng.lat, e.latlng.lng);
-    });
-
-    renderLeafletLayers(map, layerGroup);
-    setMapEngine('leaflet');
-    setEngineLabel(isSatellite ? 'GIS Satellite Engine' : 'Interactive GIS Engine (Leaflet)');
-  }, [activeViewMode]);
-
-  // Render markers and circles in Leaflet
-  const renderLeafletLayers = (map, group) => {
-    group.clearLayers();
-
-    // 1. Predicted Hotspots & Danger Heat Rings
-    if (layers.predicted) {
-      HOTSPOTS.forEach((spot) => {
-        // Red Hotspot Circle
-        const circle = L.circle([spot.lat, spot.lng], {
-          radius: spot.radiusMeters,
-          color: '#DC2626',
-          weight: 2,
-          fillColor: '#EF4444',
-          fillOpacity: 0.18,
-          dashArray: '4, 4',
-        });
-        circle.addTo(group);
-
-        // Core Pin
-        const customPin = L.divIcon({
-          className: 'custom-leaflet-marker',
-          html: `
-            <div style="position: relative; width: 24px; height: 24px;">
-              <div style="position: absolute; width: 24px; height: 24px; background: rgba(239,68,68,0.4); border-radius: 50%; animation: ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>
-              <div style="position: absolute; top: 4px; left: 4px; width: 16px; height: 16px; background: #DC2626; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>
-            </div>
-          `,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12],
-        });
-
-        const marker = L.marker([spot.lat, spot.lng], { icon: customPin }).addTo(group);
-        marker.on('click', () => {
-          if (onSelectHotspot) onSelectHotspot(spot);
-          if (setShowPopup) setShowPopup(true);
-        });
-      });
-    }
-
-    // 2. ATM Nodes
-    if (layers.atm) {
-      ATM_POINTS.forEach((atm) => {
-        const atmIcon = L.divIcon({
-          className: 'atm-marker',
-          html: `<div style="width: 12px; height: 12px; background: #F59E0B; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3);"></div>`,
-          iconSize: [12, 12],
-          iconAnchor: [6, 6],
-        });
-        L.marker([atm.lat, atm.lng], { icon: atmIcon })
-          .bindTooltip(`<b>ATM:</b> ${atm.name}`, { direction: 'top' })
-          .addTo(group);
-      });
-    }
-
-    // 3. Historical Points
-    if (layers.historical) {
-      HISTORICAL_POINTS.forEach((hist) => {
-        const histIcon = L.divIcon({
-          className: 'hist-marker',
-          html: `<div style="width: 14px; height: 14px; background: #2563EB; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3);"></div>`,
-          iconSize: [14, 14],
-          iconAnchor: [7, 7],
-        });
-        L.marker([hist.lat, hist.lng], { icon: histIcon })
-          .bindTooltip(`<b>Historical:</b> ${hist.name} (${hist.amount})`, { direction: 'top' })
-          .addTo(group);
-      });
-    }
-
-    // 4. Active Cases
-    if (layers.active) {
-      ACTIVE_CASES.forEach((act) => {
-        const actIcon = L.divIcon({
-          className: 'active-marker',
-          html: `<div style="width: 12px; height: 12px; background: #10B981; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3);"></div>`,
-          iconSize: [12, 12],
-          iconAnchor: [6, 6],
-        });
-        L.marker([act.lat, act.lng], { icon: actIcon })
-          .bindTooltip(`<b>Active Hop:</b> ${act.name}`, { direction: 'top' })
-          .addTo(group);
-      });
-    }
-
-    // 5. Intelligence Vector Lines
-    const vectorCoords = [
-      [23.0300, 72.5178], // Ahmedabad
-      [22.3107, 73.1812], // Vadodara
-      [21.1702, 72.8311], // Surat
-    ];
-    L.polyline(vectorCoords, {
-      color: '#EF4444',
-      weight: 2,
-      dashArray: '6, 6',
-      opacity: 0.7,
-    }).addTo(group);
+    // Invalidate sizes after layout transition
+    setTimeout(() => {
+      if (target === 'google' && googleMapInstance.current && window.google) {
+        window.google.maps.event.trigger(googleMapInstance.current, 'resize');
+        googleMapInstance.current.setCenter(defaultCenter);
+      } else if (target === 'leaflet' && leafletMapInstance.current) {
+        leafletMapInstance.current.invalidateSize();
+      }
+    }, 100);
   };
 
   // -------------------------------------------------------------
-  // GOOGLE MAPS INITIALIZER
+  // 1. GOOGLE MAPS ENGINE
   // -------------------------------------------------------------
   const initGoogleMap = useCallback(async () => {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+    if (!googleContainerRef.current) return;
 
-    // If no key provided, fallback to Leaflet directly
-    if (!apiKey || (apiKey.includes('AIzaSyASeiOhzKOyOOPditkIRxtsC8CPbuQ-dI4') === false && apiKey.length < 20)) {
-      handleEngineSwitch('leaflet');
-      initLeafletMap();
+    if (googleMapInstance.current && window.google) {
+      window.google.maps.event.trigger(googleMapInstance.current, 'resize');
+      renderGoogleOverlays(window.google, googleMapInstance.current);
+      setGoogleStatus('ready');
+      setEngineLabel('Google Maps (Live Satellite & GIS)');
       return;
     }
 
-    // Setup global auth failure handler in case key is restricted/blocked
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+
+    // Watch for auth failures (e.g. invalid key or billing disabled)
     window.gm_authFailure = () => {
-      console.warn('Google Maps authentication failed or billing inactive. Falling back to Leaflet GIS engine.');
-      handleEngineSwitch('leaflet');
-      initLeafletMap();
+      console.warn('Google Maps JS API key authorization failed. Activating Google Maps Embed fallback.');
+      setGoogleStatus('embed_fallback');
+      setEngineLabel('Google Maps (Interactive Satellite)');
     };
 
     try {
-      // Clean up Leaflet if active
-      if (leafletMapInstance.current) {
-        leafletMapInstance.current.remove();
-        leafletMapInstance.current = null;
+      if (!window.google || !window.google.maps) {
+        const loader = new Loader({
+          apiKey,
+          version: 'weekly',
+        });
+        await loader.load();
       }
 
-      const loader = new Loader({
-        apiKey,
-        version: 'weekly',
-        libraries: ['places', 'geometry'],
-      });
-
-      await loader.load();
-
-      if (!mapContainerRef.current) return;
-      mapContainerRef.current.innerHTML = '';
+      if (!googleContainerRef.current) return;
 
       const google = window.google;
       const mapType =
@@ -359,32 +212,15 @@ export default function IntelligenceMapCanvas({
           ? google.maps.MapTypeId.HYBRID
           : google.maps.MapTypeId.ROADMAP;
 
-      const map = new google.maps.Map(mapContainerRef.current, {
+      const map = new google.maps.Map(googleContainerRef.current, {
         center: defaultCenter,
         zoom: 13,
         mapTypeId: mapType,
-        disableDefaultUI: true,
-        tilt: activeViewMode === '3D View' ? 45 : 0,
-        styles:
-          mapType === google.maps.MapTypeId.ROADMAP
-            ? [
-                {
-                  featureType: 'administrative',
-                  elementType: 'labels.text.fill',
-                  stylers: [{ color: '#444444' }],
-                },
-                {
-                  featureType: 'landscape',
-                  elementType: 'all',
-                  stylers: [{ color: '#f2f2f2' }],
-                },
-                {
-                  featureType: 'water',
-                  elementType: 'all',
-                  stylers: [{ color: '#cde2fe' }, { visibility: 'on' }],
-                },
-              ]
-            : [],
+        disableDefaultUI: false,
+        zoomControl: true,
+        streetViewControl: false,
+        mapTypeControl: true,
+        fullscreenControl: false,
       });
 
       googleMapInstance.current = map;
@@ -394,30 +230,29 @@ export default function IntelligenceMapCanvas({
       });
 
       renderGoogleOverlays(google, map);
-      setMapEngine('google');
-      setEngineLabel('Google Maps v3 (Live Satellite & GIS)');
+      setGoogleStatus('ready');
+      setEngineLabel('Google Maps (Live Satellite & GIS)');
     } catch (err) {
-      console.warn('Google Maps initialization failed, switching to Leaflet:', err);
-      handleEngineSwitch('leaflet');
-      initLeafletMap();
+      console.warn('Google Maps JS Loader issue, rendering Google Maps Embed:', err);
+      setGoogleStatus('embed_fallback');
+      setEngineLabel('Google Maps (Interactive Satellite)');
     }
-  }, [activeViewMode, initLeafletMap]);
+  }, [activeViewMode]);
 
-  // Render Google Maps overlays
   const renderGoogleOverlays = (google, map) => {
-    // Clear old overlays
+    if (!google || !map) return;
+
     googleOverlays.current.markers.forEach((m) => m.setMap(null));
     googleOverlays.current.circles.forEach((c) => c.setMap(null));
     googleOverlays.current.lines.forEach((l) => l.setMap(null));
     googleOverlays.current = { markers: [], circles: [], lines: [] };
 
-    // 1. Predicted Hotspots
+    // 1. Hotspots
     if (layers.predicted) {
       HOTSPOTS.forEach((spot) => {
-        // Red Danger Radius Circle
         const circle = new google.maps.Circle({
           strokeColor: '#DC2626',
-          strokeOpacity: 0.8,
+          strokeOpacity: 0.85,
           strokeWeight: 2,
           fillColor: '#EF4444',
           fillOpacity: 0.22,
@@ -427,7 +262,6 @@ export default function IntelligenceMapCanvas({
         });
         googleOverlays.current.circles.push(circle);
 
-        // Marker Pin
         const marker = new google.maps.Marker({
           position: { lat: spot.lat, lng: spot.lng },
           map,
@@ -511,7 +345,7 @@ export default function IntelligenceMapCanvas({
       });
     }
 
-    // 5. Vectors
+    // 5. Connecting Vectors
     const path = [
       { lat: 23.0300, lng: 72.5178 },
       { lat: 22.3107, lng: 73.1812 },
@@ -528,46 +362,179 @@ export default function IntelligenceMapCanvas({
     googleOverlays.current.lines.push(polyline);
   };
 
-  // Trigger init based on activeEngine & view change
-  useEffect(() => {
-    if (activeEngine === 'google') {
-      initGoogleMap();
-    } else {
-      initLeafletMap();
-    }
-  }, [activeEngine, initGoogleMap, initLeafletMap]);
+  // -------------------------------------------------------------
+  // 2. LEAFLET ENGINE
+  // -------------------------------------------------------------
+  const initLeafletMap = useCallback(() => {
+    if (!leafletContainerRef.current) return;
 
-  // Handle Layer updates on the fly
+    if (leafletMapInstance.current) {
+      leafletMapInstance.current.invalidateSize();
+      return;
+    }
+
+    const map = L.map(leafletContainerRef.current, {
+      center: [defaultCenter.lat, defaultCenter.lng],
+      zoom: 13,
+      zoomControl: false,
+    });
+
+    const isSatellite = activeViewMode === 'Satellite View' || activeViewMode === '3D View';
+    const tileUrl = isSatellite
+      ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+    const tileAttr = isSatellite
+      ? '&copy; Esri World Imagery'
+      : '&copy; OpenStreetMap contributors';
+
+    L.tileLayer(tileUrl, {
+      maxZoom: 19,
+      attribution: tileAttr,
+    }).addTo(map);
+
+    const layerGroup = L.layerGroup().addTo(map);
+    leafletLayerGroup.current = layerGroup;
+    leafletMapInstance.current = map;
+
+    map.on('mousemove', (e) => {
+      handleCoords(e.latlng.lat, e.latlng.lng);
+    });
+
+    renderLeafletLayers(map, layerGroup);
+  }, [activeViewMode]);
+
+  const renderLeafletLayers = (map, group) => {
+    if (!map || !group) return;
+    group.clearLayers();
+
+    if (layers.predicted) {
+      HOTSPOTS.forEach((spot) => {
+        const circle = L.circle([spot.lat, spot.lng], {
+          radius: spot.radiusMeters,
+          color: '#DC2626',
+          weight: 2,
+          fillColor: '#EF4444',
+          fillOpacity: 0.18,
+          dashArray: '4, 4',
+        });
+        circle.addTo(group);
+
+        const customPin = L.divIcon({
+          className: 'custom-leaflet-marker',
+          html: `
+            <div style="position: relative; width: 24px; height: 24px;">
+              <div style="position: absolute; width: 24px; height: 24px; background: rgba(239,68,68,0.4); border-radius: 50%; animation: ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>
+              <div style="position: absolute; top: 4px; left: 4px; width: 16px; height: 16px; background: #DC2626; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>
+            </div>
+          `,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        });
+
+        const marker = L.marker([spot.lat, spot.lng], { icon: customPin }).addTo(group);
+        marker.on('click', () => {
+          if (onSelectHotspot) onSelectHotspot(spot);
+          if (setShowPopup) setShowPopup(true);
+        });
+      });
+    }
+
+    if (layers.atm) {
+      ATM_POINTS.forEach((atm) => {
+        const atmIcon = L.divIcon({
+          className: 'atm-marker',
+          html: `<div style="width: 12px; height: 12px; background: #F59E0B; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [12, 12],
+          iconAnchor: [6, 6],
+        });
+        L.marker([atm.lat, atm.lng], { icon: atmIcon })
+          .bindTooltip(`<b>ATM:</b> ${atm.name}`, { direction: 'top' })
+          .addTo(group);
+      });
+    }
+
+    if (layers.historical) {
+      HISTORICAL_POINTS.forEach((hist) => {
+        const histIcon = L.divIcon({
+          className: 'hist-marker',
+          html: `<div style="width: 14px; height: 14px; background: #2563EB; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [14, 14],
+          iconAnchor: [7, 7],
+        });
+        L.marker([hist.lat, hist.lng], { icon: histIcon })
+          .bindTooltip(`<b>Historical:</b> ${hist.name} (${hist.amount})`, { direction: 'top' })
+          .addTo(group);
+      });
+    }
+
+    if (layers.active) {
+      ACTIVE_CASES.forEach((act) => {
+        const actIcon = L.divIcon({
+          className: 'active-marker',
+          html: `<div style="width: 12px; height: 12px; background: #10B981; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [12, 12],
+          iconAnchor: [6, 6],
+        });
+        L.marker([act.lat, act.lng], { icon: actIcon })
+          .bindTooltip(`<b>Active Hop:</b> ${act.name}`, { direction: 'top' })
+          .addTo(group);
+      });
+    }
+
+    const vectorCoords = [
+      [23.0300, 72.5178],
+      [22.3107, 73.1812],
+      [21.1702, 72.8311],
+    ];
+    L.polyline(vectorCoords, {
+      color: '#EF4444',
+      weight: 2,
+      dashArray: '6, 6',
+      opacity: 0.7,
+    }).addTo(group);
+  };
+
+  // -------------------------------------------------------------
+  // INITIALIZATION ON MOUNT
+  // -------------------------------------------------------------
   useEffect(() => {
-    if (mapEngine === 'google' && googleMapInstance.current && window.google) {
+    initGoogleMap();
+    initLeafletMap();
+  }, [initGoogleMap, initLeafletMap]);
+
+  // Update overlays on layer change
+  useEffect(() => {
+    if (googleMapInstance.current && window.google) {
       renderGoogleOverlays(window.google, googleMapInstance.current);
-    } else if (mapEngine === 'leaflet' && leafletMapInstance.current && leafletLayerGroup.current) {
+    }
+    if (leafletMapInstance.current && leafletLayerGroup.current) {
       renderLeafletLayers(leafletMapInstance.current, leafletLayerGroup.current);
     }
-  }, [layers, mapEngine]);
+  }, [layers]);
 
   // Zoom controls
   const handleZoomIn = () => {
-    if (mapEngine === 'google' && googleMapInstance.current) {
+    if (activeEngine === 'google' && googleMapInstance.current) {
       googleMapInstance.current.setZoom(googleMapInstance.current.getZoom() + 1);
-    } else if (mapEngine === 'leaflet' && leafletMapInstance.current) {
+    } else if (leafletMapInstance.current) {
       leafletMapInstance.current.zoomIn();
     }
   };
 
   const handleZoomOut = () => {
-    if (mapEngine === 'google' && googleMapInstance.current) {
+    if (activeEngine === 'google' && googleMapInstance.current) {
       googleMapInstance.current.setZoom(googleMapInstance.current.getZoom() - 1);
-    } else if (mapEngine === 'leaflet' && leafletMapInstance.current) {
+    } else if (leafletMapInstance.current) {
       leafletMapInstance.current.zoomOut();
     }
   };
 
   const handleRecenter = () => {
-    if (mapEngine === 'google' && googleMapInstance.current) {
+    if (activeEngine === 'google' && googleMapInstance.current) {
       googleMapInstance.current.panTo(defaultCenter);
       googleMapInstance.current.setZoom(13);
-    } else if (mapEngine === 'leaflet' && leafletMapInstance.current) {
+    } else if (leafletMapInstance.current) {
       leafletMapInstance.current.setView([defaultCenter.lat, defaultCenter.lng], 13);
     }
   };
@@ -576,8 +543,43 @@ export default function IntelligenceMapCanvas({
 
   return (
     <div className="relative w-full h-[460px] rounded-xl overflow-hidden border border-slate-200/80 bg-slate-100">
-      {/* Map Target Canvas */}
-      <div ref={mapContainerRef} className="w-full h-full" />
+      {/* 1. GOOGLE MAPS CONTAINER */}
+      <div
+        className={`w-full h-full relative ${activeEngine === 'google' ? 'block' : 'hidden'}`}
+      >
+        {googleStatus !== 'embed_fallback' ? (
+          <div ref={googleContainerRef} className="w-full h-full" />
+        ) : (
+          <div className="w-full h-full relative">
+            {/* Real Interactive Google Maps Satellite / Roadmap Embed */}
+            <iframe
+              title="Google Maps Live Satellite"
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              scrolling="no"
+              marginHeight="0"
+              marginWidth="0"
+              src={`https://maps.google.com/maps?q=${activeSpot.lat},${activeSpot.lng}&z=13&t=${
+                activeViewMode === 'Satellite View' || activeViewMode === '3D View' ? 'k' : 'm'
+              }&output=embed`}
+              className="w-full h-full"
+            />
+            {/* Threat Radar Ring Overlay over Google Maps */}
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+              <div className="relative w-48 h-48 border-2 border-red-500/60 rounded-full animate-ping bg-red-500/10"></div>
+              <div className="absolute w-36 h-36 border-2 border-red-600 rounded-full bg-red-600/20"></div>
+              <div className="absolute w-4 h-4 bg-red-600 rounded-full border-2 border-white shadow-lg"></div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 2. LEAFLET OSM CONTAINER */}
+      <div
+        ref={leafletContainerRef}
+        className={`w-full h-full ${activeEngine === 'leaflet' ? 'block' : 'hidden'}`}
+      />
 
       {/* Interactive Engine Toggle Switcher (Top-Left) */}
       <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2 z-20">
@@ -612,7 +614,7 @@ export default function IntelligenceMapCanvas({
         {/* Engine Status Label */}
         <div className="hidden sm:flex bg-white/95 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-semibold text-slate-700 items-center gap-1.5 shadow-2xs pointer-events-none">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>{activeEngine === 'google' ? 'Google Maps v3 (Live)' : 'Leaflet GIS Engine'}</span>
+          <span>{activeEngine === 'google' ? 'Google Maps (Satellite & Streets)' : 'Leaflet (OpenStreetMap GIS)'}</span>
         </div>
       </div>
 
@@ -621,27 +623,27 @@ export default function IntelligenceMapCanvas({
         <button
           onClick={handleZoomIn}
           title="Zoom In"
-          className="w-8 h-8 rounded-lg bg-white/95 backdrop-blur-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-slate-50 transition shadow-xs"
+          className="w-8 h-8 rounded-lg bg-white/95 backdrop-blur-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-slate-50 transition shadow-xs cursor-pointer"
         >
           <ZoomIn className="w-4 h-4" />
         </button>
         <button
           onClick={handleZoomOut}
           title="Zoom Out"
-          className="w-8 h-8 rounded-lg bg-white/95 backdrop-blur-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-slate-50 transition shadow-xs"
+          className="w-8 h-8 rounded-lg bg-white/95 backdrop-blur-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-slate-50 transition shadow-xs cursor-pointer"
         >
           <ZoomOut className="w-4 h-4" />
         </button>
         <button
           onClick={handleRecenter}
           title="Recenter Map"
-          className="w-8 h-8 rounded-lg bg-white/95 backdrop-blur-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-slate-50 transition shadow-xs"
+          className="w-8 h-8 rounded-lg bg-white/95 backdrop-blur-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-slate-50 transition shadow-xs cursor-pointer"
         >
           <Crosshair className="w-4 h-4 text-blue-600" />
         </button>
       </div>
 
-      {/* Floating Hotspot Details Popup (Matching Panel 5 in Screenshot) */}
+      {/* Floating Hotspot Details Popup (Matching Panel 5) */}
       {showPopup && activeSpot && (
         <div className="absolute top-[24%] left-[38%] -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 w-64 z-20 animate-in fade-in zoom-in-95 duration-200">
           <div className="flex items-start justify-between pb-2 border-b border-slate-100">
@@ -651,7 +653,7 @@ export default function IntelligenceMapCanvas({
             </div>
             <button
               onClick={() => setShowPopup && setShowPopup(false)}
-              className="text-slate-400 hover:text-slate-600 text-xs p-1"
+              className="text-slate-400 hover:text-slate-600 text-xs p-1 cursor-pointer"
             >
               ✕
             </button>
@@ -676,7 +678,7 @@ export default function IntelligenceMapCanvas({
             onClick={() => {
               if (onSelectHotspot) onSelectHotspot(activeSpot);
             }}
-            className="w-full py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition shadow-xs"
+            className="w-full py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition shadow-xs cursor-pointer"
           >
             View Cases
           </button>
