@@ -1,0 +1,72 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+frontend/dist/
+build/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+backend/app/__pycache__/
+backend/app/api/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Databases & local state
+*.db
+*.sqlite
+*.sqlite3
+cybertrace_ai.db
+
+# Environment variables & secrets
+.env
+backend/.env
+frontend/.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vite temporary files
+vite.config.js.timestamp*
+frontend/vite.config.js.timestamp*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
