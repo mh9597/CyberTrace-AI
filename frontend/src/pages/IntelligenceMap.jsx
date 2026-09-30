@@ -21,6 +21,7 @@ export default function IntelligenceMap() {
   const [selectedDistrict, setSelectedDistrict] = useState('Ahmedabad');
   const [selectedRisk, setSelectedRisk] = useState('All Levels');
   const [activeViewMode, setActiveViewMode] = useState('Heatmap View');
+  const [mapEngine, setMapEngine] = useState('google'); // 'google' | 'leaflet'
   const [showPopup, setShowPopup] = useState(true);
   const [selectedHotspot, setSelectedHotspot] = useState(HOTSPOTS[0]);
   const [coordsDisplay, setCoordsDisplay] = useState('23.0225° N, 72.5714° E');
@@ -49,7 +50,33 @@ export default function IntelligenceMap() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Map Engine Toggle Switcher */}
+          <div className="bg-slate-100 p-1 rounded-xl border border-slate-200/80 flex items-center gap-1 shadow-2xs">
+            <button
+              onClick={() => setMapEngine('google')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+                mapEngine === 'google'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${mapEngine === 'google' ? 'bg-white' : 'bg-blue-600'}`}></span>
+              <span>Google Maps</span>
+            </button>
+            <button
+              onClick={() => setMapEngine('leaflet')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+                mapEngine === 'leaflet'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${mapEngine === 'leaflet' ? 'bg-white' : 'bg-emerald-600'}`}></span>
+              <span>Leaflet OSM</span>
+            </button>
+          </div>
+
           <div className="px-3.5 py-1.5 rounded-full bg-red-50 text-red-600 border border-red-200 text-xs font-bold flex items-center gap-1.5 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
             <span>Risk Zones Active</span>
@@ -200,6 +227,8 @@ export default function IntelligenceMap() {
         <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between min-h-[560px] relative overflow-hidden">
           {/* Real Interactive Map Canvas (Google Maps + GIS) */}
           <IntelligenceMapCanvas
+            engine={mapEngine}
+            onEngineChange={setMapEngine}
             activeViewMode={activeViewMode}
             layers={layers}
             selectedState={selectedState}

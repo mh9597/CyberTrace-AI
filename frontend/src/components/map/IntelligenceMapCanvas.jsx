@@ -126,11 +126,20 @@ export default function IntelligenceMapCanvas({
   showPopup = true,
   setShowPopup,
   onCoordinatesChange,
+  engine: propEngine,
+  onEngineChange,
 }) {
   const mapContainerRef = useRef(null);
+  const [internalEngine, setInternalEngine] = useState('google'); // 'google' | 'leaflet'
+  const activeEngine = propEngine || internalEngine;
   const [mapEngine, setMapEngine] = useState('loading'); // 'google' | 'leaflet' | 'loading'
   const [engineLabel, setEngineLabel] = useState('Initializing Map...');
   const [currentCoords, setCurrentCoords] = useState({ lat: 23.0225, lng: 72.5714 });
+
+  const handleEngineSwitch = (target) => {
+    setInternalEngine(target);
+    if (onEngineChange) onEngineChange(target);
+  };
 
   // References to keep instances alive
   const googleMapInstance = useRef(null);
@@ -153,6 +162,15 @@ export default function IntelligenceMapCanvas({
   // -------------------------------------------------------------
   const initLeafletMap = useCallback(() => {
     if (!mapContainerRef.current) return;
+
+    // Clean up Google Overlays if present
+    if (googleOverlays.current) {
+      googleOverlays.current.markers.forEach((m) => m.setMap(null));
+      googleOverlays.current.circles.forEach((c) => c.setMap(null));
+      googleOverlays.current.lines.forEach((l) => l.setMap(null));
+      googleOverlays.current = { markers: [], circles: [], lines: [] };
+    }
+    googleMapInstance.current = null;
 
     // Clean up if already exists
     if (leafletMapInstance.current) {
@@ -302,7 +320,8 @@ export default function IntelligenceMapCanvas({
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
     // If no key provided, fallback to Leaflet directly
-    if (!apiKey || apiKey.includes('AIzaSyASeiOhzKOyOOPditkIRxtsC8CPbuQ-dI4') === false && apiKey.length < 20) {
+    if (!apiKey || (apiKey.includes('AIzaSyASeiOhzKOyOOPditkIRxtsC8CPbuQ-dI4') === false && apiKey.length < 20)) {
+      handleEngineSwitch('leaflet');
       initLeafletMap();
       return;
     }
@@ -310,10 +329,17 @@ export default function IntelligenceMapCanvas({
     // Setup global auth failure handler in case key is restricted/blocked
     window.gm_authFailure = () => {
       console.warn('Google Maps authentication failed or billing inactive. Falling back to Leaflet GIS engine.');
+      handleEngineSwitch('leaflet');
       initLeafletMap();
     };
 
     try {
+      // Clean up Leaflet if active
+      if (leafletMapInstance.current) {
+        leafletMapInstance.current.remove();
+        leafletMapInstance.current = null;
+      }
+
       const loader = new Loader({
         apiKey,
         version: 'weekly',
@@ -372,6 +398,7 @@ export default function IntelligenceMapCanvas({
       setEngineLabel('Google Maps v3 (Live Satellite & GIS)');
     } catch (err) {
       console.warn('Google Maps initialization failed, switching to Leaflet:', err);
+      handleEngineSwitch('leaflet');
       initLeafletMap();
     }
   }, [activeViewMode, initLeafletMap]);
@@ -501,10 +528,14 @@ export default function IntelligenceMapCanvas({
     googleOverlays.current.lines.push(polyline);
   };
 
-  // Trigger init on mount & view change
+  // Trigger init based on activeEngine & view change
   useEffect(() => {
-    initGoogleMap();
-  }, [initGoogleMap]);
+    if (activeEngine === 'google') {
+      initGoogleMap();
+    } else {
+      initLeafletMap();
+    }
+  }, [activeEngine, initGoogleMap, initLeafletMap]);
 
   // Handle Layer updates on the fly
   useEffect(() => {
@@ -548,10 +579,41 @@ export default function IntelligenceMapCanvas({
       {/* Map Target Canvas */}
       <div ref={mapContainerRef} className="w-full h-full" />
 
-      {/* Floating Engine Status Pill (Top-Left) */}
-      <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200/80 text-[11px] font-semibold text-slate-700 flex items-center gap-2 shadow-xs z-10 pointer-events-none">
-        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span>{engineLabel}</span>
+      {/* Interactive Engine Toggle Switcher (Top-Left) */}
+      <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2 z-20">
+        <div className="bg-white/95 backdrop-blur-md p-1 rounded-xl border border-slate-200/90 shadow-md flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => handleEngineSwitch('google')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeEngine === 'google'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full ${activeEngine === 'google' ? 'bg-white' : 'bg-blue-600'}`}></span>
+            <span>Google Maps</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleEngineSwitch('leaflet')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeEngine === 'leaflet'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full ${activeEngine === 'leaflet' ? 'bg-white' : 'bg-emerald-600'}`}></span>
+            <span>Leaflet OSM</span>
+          </button>
+        </div>
+
+        {/* Engine Status Label */}
+        <div className="hidden sm:flex bg-white/95 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-semibold text-slate-700 items-center gap-1.5 shadow-2xs pointer-events-none">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>{activeEngine === 'google' ? 'Google Maps v3 (Live)' : 'Leaflet GIS Engine'}</span>
+        </div>
       </div>
 
       {/* Map Control Buttons (Top-Right) */}
