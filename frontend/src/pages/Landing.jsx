@@ -21,6 +21,7 @@ import {
   BarChart3,
   Users,
   Compass,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function Landing() {
