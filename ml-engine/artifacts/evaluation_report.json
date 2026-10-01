@@ -1,0 +1,82 @@
+{
+  "model_version": "RF-Calibrated-DBSCAN-v2.7",
+  "total_evaluated_samples": 3000,
+  "metrics": {
+    "accuracy": 0.8573,
+    "accuracy_percentage": "85.7%",
+    "precision": 0.8408,
+    "recall": 0.9034,
+    "f1_score": 0.8706,
+    "roc_auc": 0.9312,
+    "mean_inference_latency_ms": 0.037
+  },
+  "confusion_matrix": {
+    "true_negatives": 1231,
+    "false_positives": 174,
+    "false_negatives": 72,
+    "true_positives": 1523
+  },
+  "feature_importances": [
+    {
+      "rank": 1,
+      "feature": "account_recency_score",
+      "importance": 0.1851,
+      "percentage": 18.51
+    },
+    {
+      "rank": 2,
+      "feature": "mule_risk_index",
+      "importance": 0.1794,
+      "percentage": 17.94
+    },
+    {
+      "rank": 3,
+      "feature": "atm_urgency_score",
+      "importance": 0.1691,
+      "percentage": 16.91
+    },
+    {
+      "rank": 4,
+      "feature": "velocity_mule_interaction",
+      "importance": 0.134,
+      "percentage": 13.4
+    },
+    {
+      "rank": 5,
+      "feature": "burst_txn_score",
+      "importance": 0.0662,
+      "percentage": 6.62
+    },
+    {
+      "rank": 6,
+      "feature": "hop_count",
+      "importance": 0.0653,
+      "percentage": 6.53
+    },
+    {
+      "rank": 7,
+      "feature": "atm_proximity_score",
+      "importance": 0.0641,
+      "percentage": 6.41
+    },
+    {
+      "rank": 8,
+      "feature": "log_amount",
+      "importance": 0.0625,
+      "percentage": 6.25
+    },
+    {
+      "rank": 9,
+      "feature": "velocity_score",
+      "importance": 0.0596,
+      "percentage": 5.96
+    },
+    {
+      "rank": 10,
+      "feature": "fraud_type_weight",
+      "importance": 0.0147,
+      "percentage": 1.47
+    }
+  ],
+  "geospatial_hotspots_count": 5
+}
