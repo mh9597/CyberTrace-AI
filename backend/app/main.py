@@ -30,10 +30,14 @@ app = FastAPI(
 )
 
 # CORS Configuration
+_raw_origins = [str(o).rstrip("/") for o in settings.CORS_ORIGINS]
+_has_wildcard = "*" in _raw_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
+    allow_origins=["*"] if _has_wildcard else _raw_origins,
+    allow_credentials=not _has_wildcard,
+    allow_origin_regex=r"^https://.*\.vercel\.app$" if not _has_wildcard else None,
     allow_methods=["*"],
     allow_headers=["*"],
 )

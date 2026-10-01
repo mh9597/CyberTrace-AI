@@ -1,18 +1,46 @@
-import React from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import Navbar from './Navbar';
+import Header from './Header';
 import Sidebar from './Sidebar';
+import CaseDetailsModal from '../modals/CaseDetailsModal';
+
+export const CaseModalContext = createContext({
+  openCaseModal: (caseId) => {},
+  closeCaseModal: () => {},
+});
+
+export const useCaseModal = () => useContext(CaseModalContext);
 
 export default function Layout() {
+  const [activeCaseId, setActiveCaseId] = useState(null);
+
+  const openCaseModal = (caseId = 'CT-3026-002') => {
+    setActiveCaseId(caseId);
+  };
+
+  const closeCaseModal = () => {
+    setActiveCaseId(null);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] flex flex-col text-slate-900 dark:text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-800 dark:selection:text-cyan-300 transition-colors duration-200">
-      <Navbar />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8 bg-slate-100/60 dark:bg-gradient-to-b dark:from-[#0b1120] dark:via-[#070b14] dark:to-[#030712] transition-colors duration-200">
-          <Outlet />
-        </main>
+    <CaseModalContext.Provider value={{ openCaseModal, closeCaseModal }}>
+      <div className="min-h-screen bg-[#F4F7FC] dark:bg-slate-950 flex flex-col text-[#0F172A] dark:text-slate-100 font-sans relative overflow-x-hidden transition-colors duration-200">
+        {/* Global Top Header */}
+        <Header />
+
+        {/* Body Layout: Sidebar + Main Content */}
+        <div className="flex flex-1 overflow-hidden relative z-10">
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto p-5 lg:p-6 bg-[#F4F7FC] dark:bg-slate-950">
+            <Outlet />
+          </main>
+        </div>
+
+        {/* Global Case Details Modal */}
+        {activeCaseId && (
+          <CaseDetailsModal caseId={activeCaseId} onClose={closeCaseModal} />
+        )}
       </div>
-    </div>
+    </CaseModalContext.Provider>
   );
 }

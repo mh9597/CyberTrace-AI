@@ -1,0 +1,171 @@
+{
+  "nodes": [
+    {
+      "id": "blueprint_cybertrace_ai",
+      "label": "CyberTrace AI Architecture Blueprint",
+      "file_type": "document",
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\CyberTrace_AI_Project_Blueprint.md",
+      "source_location": "CyberTrace_AI_Project_Blueprint.md:L1",
+      "source_url": null,
+      "captured_at": null,
+      "author": "SIH Team",
+      "contributor": null
+    },
+    {
+      "id": "concept_mule_account_detection",
+      "label": "Mule Account Velocity & Fan-out Analysis",
+      "file_type": "concept",
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\CyberTrace_AI_Project_Blueprint.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_cashout_forecasting",
+      "label": "Cash-Out Point Forecasting (ATM / Branch / POS)",
+      "file_type": "concept",
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\CyberTrace_AI_Project_Blueprint.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_spatial_dbscan_clustering",
+      "label": "DBSCAN Geospatial Hotspot Clustering",
+      "file_type": "concept",
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\CyberTrace_AI_Project_Blueprint.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_sha256_audit_trail",
+      "label": "Tamper-Evident SHA-256 Audit Trail",
+      "file_type": "concept",
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\docs\\security\\security_design.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_dual_map_engine",
+      "label": "Dual Engine Map (Google Maps JS API + Leaflet OSM)",
+      "file_type": "concept",
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\frontend\\src\\features\\map\\GoogleMapView.jsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_networkx_graph_intelligence",
+      "label": "NetworkX Multi-Hop Mule Chain Intelligence",
+      "file_type": "concept",
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\backend\\app\\services\\graph_service.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_random_forest_forecaster",
+      "label": "Random Forest Risk Scorer & Velocity Model",
+      "file_type": "concept",
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\backend\\app\\services\\prediction_engine.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "blueprint_cybertrace_ai",
+      "target": "concept_mule_account_detection",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\CyberTrace_AI_Project_Blueprint.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "blueprint_cybertrace_ai",
+      "target": "concept_cashout_forecasting",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\CyberTrace_AI_Project_Blueprint.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_cashout_forecasting",
+      "target": "concept_spatial_dbscan_clustering",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\CyberTrace_AI_Project_Blueprint.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_cashout_forecasting",
+      "target": "concept_random_forest_forecaster",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\backend\\app\\services\\prediction_engine.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_mule_account_detection",
+      "target": "concept_networkx_graph_intelligence",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\backend\\app\\services\\graph_service.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_spatial_dbscan_clustering",
+      "target": "concept_dual_map_engine",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\frontend\\src\\features\\map\\GoogleMapView.jsx",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "hyperedge_core_pipeline",
+      "label": "CyberTrace Predictive Pipeline",
+      "nodes": [
+        "concept_mule_account_detection",
+        "concept_cashout_forecasting",
+        "concept_spatial_dbscan_clustering"
+      ],
+      "relation": "implement",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "C:\\Users\\manan\\OneDrive\\Documents\\SIH_PROJECT\\CyberTrace-AI\\CyberTrace_AI_Project_Blueprint.md"
+    }
+  ],
+  "input_tokens": 1250,
+  "output_tokens": 450
+}
