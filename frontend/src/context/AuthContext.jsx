@@ -13,14 +13,7 @@ export const AuthProvider = ({ children }) => {
         return null;
       }
     }
-    // Default active demo investigator
-    return {
-      id: 2,
-      email: 'investigator@cybertrace.gov.in',
-      full_name: 'Sub-Inspector Ananya Rao',
-      role: 'investigator',
-      badge_number: 'IND-DEL-409',
-    };
+    return null;
   });
   const [loading, setLoading] = useState(false);
 
@@ -43,6 +36,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const signup = async ({ email, password, full_name, role, badge_number }) => {
+    setLoading(true);
+    try {
+      await api.post('/auth/signup', {
+        email,
+        password,
+        full_name,
+        role,
+        badge_number,
+      });
+      // Deliberately do not auto-login so user must proceed through the login screen first
+      return { success: true };
+    } catch (err) {
+      return {
+        success: false,
+        error: err.response?.data?.detail || 'Officer registration failed. Please verify information.',
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       await api.post('/auth/logout');
@@ -55,7 +70,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, setUser, login, signup, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

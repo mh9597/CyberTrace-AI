@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   ShieldAlert,
   ArrowRight,
@@ -25,20 +26,81 @@ import {
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [showDemoVideo, setShowDemoVideo] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
+
+  const navItems = [
+    { id: 'home', label: 'Home' },
+    { id: 'features', label: 'Features' },
+    { id: 'solution', label: 'Solution' },
+    { id: 'how-it-works', label: 'How it Works' },
+    { id: 'impact', label: 'Impact' },
+    { id: 'about', label: 'About' },
+  ];
+
+  const handleGetStarted = () => {
+    if (user) {
+      navigate('/dashboard');
+    } else {
+      navigate('/login');
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
+      // 1. IsScrolled state for header background
       if (window.scrollY > 20) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
       }
+
+      // 2. Bottom of page check (activates 'about' when scrolled near bottom)
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80) {
+        setActiveSection('about');
+        return;
+      }
+
+      // 3. Section scroll-spy with header offset
+      const headerOffset = 160;
+      let current = 'home';
+      for (const item of navItems) {
+        const el = document.getElementById(item.id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= headerOffset) {
+            current = item.id;
+          }
+        }
+      }
+      setActiveSection(current);
     };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const scrollToSection = (e, id) => {
+    e.preventDefault();
+    setActiveSection(id);
+    if (id === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const el = document.getElementById(id);
+    if (el) {
+      const headerOffset = 80;
+      const elementPosition = el.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F7FAFF] text-[#0F172A] font-sans relative overflow-x-hidden selection:bg-blue-500/20 selection:text-blue-700">
@@ -53,7 +115,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6 sm:px-8 flex items-center justify-between">
           <div
             className="flex items-center gap-3 cursor-pointer group"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md ring-1 ring-blue-500/20 group-hover:scale-105 transition-transform">
               <ShieldAlert className="w-6 h-6 text-white" />
@@ -63,37 +125,33 @@ export default function Landing() {
             </span>
           </div>
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-7 text-sm font-medium text-slate-700">
-            <a
-              href="#home"
-              className="bg-blue-100/70 text-blue-600 font-bold px-3.5 py-1 rounded-full shadow-xs transition"
-            >
-              Home
-            </a>
-            <a href="#features" className="hover:text-blue-600 transition font-semibold">
-              Features
-            </a>
-            <a href="#solution" className="hover:text-blue-600 transition font-semibold">
-              Solution
-            </a>
-            <a href="#how-it-works" className="hover:text-blue-600 transition font-semibold">
-              How it Works
-            </a>
-            <a href="#impact" className="hover:text-blue-600 transition font-semibold">
-              Impact
-            </a>
-            <a href="#about" className="hover:text-blue-600 transition font-semibold">
-              About
-            </a>
+          {/* Navigation Links with Dynamic Active Switching */}
+          <div className="hidden md:flex items-center gap-2 sm:gap-4 text-sm font-medium text-slate-700">
+            {navItems.map((item) => {
+              const isActive = activeSection === item.id;
+              return (
+                <a
+                  key={item.id}
+                  href={`#${item.id}`}
+                  onClick={(e) => scrollToSection(e, item.id)}
+                  className={`px-3.5 py-1 rounded-full text-sm font-semibold transition-all duration-200 ${
+                    isActive
+                      ? 'bg-blue-100/80 text-blue-600 font-bold shadow-xs'
+                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-100/60'
+                  }`}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
           </div>
 
           {/* Action CTA */}
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={handleGetStarted}
             className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all"
           >
-            <span>Get Started</span>
+            <span>{user ? 'Dashboard' : 'Get Started'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -146,10 +204,10 @@ export default function Landing() {
               {/* Buttons */}
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <button
-                  onClick={() => navigate('/dashboard')}
+                  onClick={handleGetStarted}
                   className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 transition-all"
                 >
-                  <span>Get Started</span>
+                  <span>{user ? 'Open Dashboard' : 'Get Started'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -375,6 +433,57 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* SCROLLABLE SECTION: SOLUTION ARCHITECTURE */}
+      <section id="solution" className="py-20 bg-slate-900 text-white relative z-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 pointer-events-none opacity-90" />
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 relative z-10">
+          <div className="text-center max-w-3xl mx-auto space-y-3 mb-16">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold border border-blue-500/20">
+              <Layers className="w-3.5 h-3.5" />
+              <span>Full-Stack Solution Architecture</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+              An End-to-End Decision Support System
+            </h2>
+            <p className="text-sm sm:text-base text-slate-400">
+              Bridge the critical gap between raw banking records and physical police field interdiction with proactive AI orchestration.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 backdrop-blur-sm space-y-4 hover:border-blue-500/50 transition">
+              <div className="w-12 h-12 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                <Database className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold">1. Ingestion & Graph Unification</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Connects heterogeneous CDRs, bank statement CSVs, UPI gateway logs, and victim complaint reports into a single normalized graph representation.
+              </p>
+            </div>
+
+            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 backdrop-blur-sm space-y-4 hover:border-blue-500/50 transition">
+              <div className="w-12 h-12 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                <Cpu className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold">2. Predictive Intelligence Core</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Dual AI engines combine random-walk mule detection with geospatial RF-DBSCAN clustering to project withdrawal probability and ATM candidate centroids.
+              </p>
+            </div>
+
+            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 backdrop-blur-sm space-y-4 hover:border-blue-500/50 transition">
+              <div className="w-12 h-12 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold">3. Actionable Field Dispatch</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Generates time-critical alerts, pre-fills bank freeze notices, and arms local cyber cell officers with exact operational heat maps.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* SCROLLABLE SECTION 3: HOW IT WORKS PIPELINE */}
       <section id="how-it-works" className="py-20 bg-white border-y border-slate-200 relative z-20">
         <div className="max-w-7xl mx-auto px-6 sm:px-8">
@@ -451,10 +560,10 @@ export default function Landing() {
             </p>
             <div className="pt-2 flex flex-wrap gap-4">
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={handleGetStarted}
                 className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-blue-500/30 transition flex items-center gap-2"
               >
-                <span>Launch Investigation Platform</span>
+                <span>{user ? 'Launch Investigation Platform' : 'Get Started'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -475,7 +584,7 @@ export default function Landing() {
           </div>
 
           <div className="flex flex-wrap items-center gap-6">
-            <button onClick={() => navigate('/dashboard')} className="hover:text-blue-600 transition">
+            <button onClick={handleGetStarted} className="hover:text-blue-600 transition">
               Dashboard
             </button>
             <button onClick={() => navigate('/complaints')} className="hover:text-blue-600 transition">
@@ -542,11 +651,11 @@ export default function Landing() {
               <button
                 onClick={() => {
                   setShowDemoVideo(false);
-                  navigate('/dashboard');
+                  handleGetStarted();
                 }}
                 className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold"
               >
-                Enter Dashboard
+                {user ? 'Enter Dashboard' : 'Get Started'}
               </button>
             </div>
           </div>

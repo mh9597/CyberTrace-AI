@@ -123,20 +123,35 @@ export default function Header({ onSearch }) {
             className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-200"
           >
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-              IR
+              {user?.full_name
+                ? user.full_name
+                    .split(' ')
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase()
+                : 'AO'}
             </div>
             <div className="text-left hidden sm:block leading-tight">
-              <div className="text-xs font-semibold text-slate-900">Inspector Raj</div>
-              <div className="text-[11px] text-slate-500">Investigator</div>
+              <div className="text-xs font-semibold text-slate-900">
+                {user?.full_name || 'Authorized Officer'}
+              </div>
+              <div className="text-[11px] text-slate-500 capitalize">
+                {user?.role || 'Investigator'}
+              </div>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
           </button>
 
           {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50">
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50">
               <div className="px-4 py-2 border-b border-slate-100">
-                <p className="text-xs font-bold text-slate-900">Inspector Raj</p>
-                <p className="text-[10px] text-slate-500">Cyber Crime Cell, Gujarat</p>
+                <p className="text-xs font-bold text-slate-900">
+                  {user?.full_name || 'Authorized Officer'}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  {user?.email || 'Badge: ' + (user?.badge_number || 'IND-HQ-01')}
+                </p>
               </div>
               <Link
                 to="/security"

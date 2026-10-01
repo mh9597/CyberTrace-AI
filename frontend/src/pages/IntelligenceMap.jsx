@@ -96,32 +96,6 @@ export default function IntelligenceMap() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Synchronized Map Engine Toggle Switcher */}
-          <div className="bg-slate-100 p-1 rounded-xl border border-slate-200/80 flex items-center gap-1 shadow-2xs">
-            <button
-              onClick={() => setMapEngine('google')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                mapEngine === 'google'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-              }`}
-            >
-              <span className={`w-2 h-2 rounded-full ${mapEngine === 'google' ? 'bg-white' : 'bg-blue-600'}`}></span>
-              <span>Google Maps</span>
-            </button>
-            <button
-              onClick={() => setMapEngine('leaflet')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                mapEngine === 'leaflet'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-              }`}
-            >
-              <span className={`w-2 h-2 rounded-full ${mapEngine === 'leaflet' ? 'bg-white' : 'bg-emerald-600'}`}></span>
-              <span>Leaflet OSM</span>
-            </button>
-          </div>
-
           <div className="px-3.5 py-1.5 rounded-full bg-red-50 text-red-600 border border-red-200 text-xs font-bold flex items-center gap-1.5 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
             <span>Risk Zones Active</span>
