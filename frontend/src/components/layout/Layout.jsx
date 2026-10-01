@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
-import Sidebar from './Sidebar';
 import CaseDetailsModal from '../modals/CaseDetailsModal';
+import AICopilotBubble from '../common/AICopilotBubble';
 
 export const CaseModalContext = createContext({
   openCaseModal: (caseId) => {},
@@ -24,17 +24,17 @@ export default function Layout() {
 
   return (
     <CaseModalContext.Provider value={{ openCaseModal, closeCaseModal }}>
-      <div className="min-h-screen bg-[#F4F7FC] dark:bg-slate-950 flex flex-col text-[#0F172A] dark:text-slate-100 font-sans relative overflow-x-hidden transition-colors duration-200">
-        {/* Global Top Header */}
+      <div className="min-h-screen bg-[#F4F7FC] dark:bg-slate-950 flex flex-col text-[#0F172A] dark:text-slate-100 font-sans transition-colors duration-200">
+        {/* Global Top Navbar (Sticky - Follows scroll) */}
         <Header />
 
-        {/* Body Layout: Sidebar + Main Content */}
-        <div className="flex flex-1 overflow-hidden relative z-10">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto p-5 lg:p-6 bg-[#F4F7FC] dark:bg-slate-950">
-            <Outlet />
-          </main>
-        </div>
+        {/* Main Content Area spanning full width */}
+        <main className="flex-1 px-2.5 py-4 sm:px-6 sm:py-6 lg:px-8 bg-[#F4F7FC] dark:bg-slate-950 w-full max-w-[1760px] mx-auto">
+          <Outlet />
+        </main>
+
+        {/* Floating Bottom Corner AI Copilot Chat Bubble */}
+        <AICopilotBubble />
 
         {/* Global Case Details Modal */}
         {activeCaseId && (
@@ -44,3 +44,4 @@ export default function Layout() {
     </CaseModalContext.Provider>
   );
 }
+

@@ -256,8 +256,8 @@ export default function PredictionCenter() {
       </div>
 
       {/* Tabs Row */}
-      <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 pb-2">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800/80 pb-2">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0 w-full md:w-auto -mx-1 px-1">
           {[
             { id: 'live', label: 'Live Cash-Out Forecast' },
             { id: 'backtest', label: 'Historical Backtesting (89.2% Acc)' },
@@ -266,7 +266,7 @@ export default function PredictionCenter() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+              className={`shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -278,13 +278,13 @@ export default function PredictionCenter() {
         </div>
 
         {/* Case Selector Dropdown */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between sm:justify-end gap-2 w-full md:w-auto shrink-0">
           <span className="text-xs text-slate-400 font-medium hidden sm:inline">Inspecting Case:</span>
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-initial">
             <select
               value={selectedCaseId}
               onChange={(e) => setSelectedCaseId(e.target.value)}
-              className="appearance-none bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl px-3 py-1.5 pr-8 text-xs font-bold font-mono text-blue-600 dark:text-blue-400 shadow-2xs focus:outline-hidden cursor-pointer"
+              className="w-full sm:w-auto appearance-none bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl px-3 py-1.5 pr-8 text-xs font-bold font-mono text-blue-600 dark:text-blue-400 shadow-2xs focus:outline-hidden cursor-pointer"
             >
               {PREDICTION_CASES.map((c) => (
                 <option key={c.id} value={c.id}>

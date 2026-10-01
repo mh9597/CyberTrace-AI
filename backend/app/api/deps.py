@@ -66,9 +66,11 @@ def get_current_principal(
     """Returns decoupled immutable UserPrincipal domain entity."""
     return UserPrincipal(
         id=current_user.id,
-        username=current_user.username or current_user.email,
+        username=getattr(current_user, "username", None) or current_user.email,
         role=current_user.role,
         police_station_id=getattr(current_user, "badge_number", None) or "DL-HQ-01",
+        full_name=getattr(current_user, "full_name", None) or current_user.email,
+        email=getattr(current_user, "email", None) or current_user.username,
     )
 
 

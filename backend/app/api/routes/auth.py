@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from backend.app.db.database import get_db
 from backend.app.core.security import verify_password, create_access_token, get_password_hash
 from backend.app.models.user import User, UserRole
-from backend.app.schemas.auth import LoginRequest, SignupRequest, TokenResponse, UserResponse
+from backend.app.schemas.auth import LoginRequest, SignupRequest, TokenResponse, UserResponse, UserUpdateRequest
 from backend.app.services.audit_service import log_audit_event
 from backend.app.api.deps import get_current_user
 
@@ -90,6 +90,38 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 def get_current_officer(current_user: User = Depends(get_current_user)):
+    return UserResponse.model_validate(current_user)
+
+
+@router.put("/me", response_model=UserResponse)
+@router.patch("/me", response_model=UserResponse)
+def update_current_officer(
+    request: UserUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if request.full_name is not None and request.full_name.strip():
+        current_user.full_name = request.full_name.strip()
+    if request.role is not None and request.role.strip():
+        clean_role = request.role.strip().lower()
+        if clean_role in [UserRole.INVESTIGATOR.value, UserRole.SENIOR_OFFICER.value, UserRole.ADMIN.value]:
+            current_user.role = clean_role
+    if request.badge_number is not None:
+        current_user.badge_number = request.badge_number.strip()
+    if request.password is not None and len(request.password.strip()) >= 6:
+        current_user.hashed_password = get_password_hash(request.password.strip())
+
+    db.commit()
+    db.refresh(current_user)
+
+    log_audit_event(
+        db=db,
+        action="USER_PROFILE_UPDATED",
+        user_id=current_user.id,
+        user_email=current_user.email,
+        outcome="SUCCESS",
+        details=f"Profile updated for officer {current_user.email}",
+    )
     return UserResponse.model_validate(current_user)
 
 

@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/cybertrace_ai"
     SQLITE_FALLBACK_URL: str = "sqlite:///./cybertrace_ai.db"
 
+    # OpenRouter / OpenAI Configuration (sourced from .env / environment)
+    OPENROUTER_API_KEY: str = ""
+    OPENROUTER_MODEL: str = "openai/gpt-4o-mini"
+    OPENROUTER_FALLBACK_MODEL: str = "openrouter/free"
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+
     # CORS
     CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",

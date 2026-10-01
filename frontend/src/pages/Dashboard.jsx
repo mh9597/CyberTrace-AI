@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Briefcase,
@@ -25,6 +25,8 @@ import {
   RefreshCw,
   X,
   ExternalLink,
+  MapPin,
+  Lock,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -45,8 +47,9 @@ import {
 } from 'recharts';
 import { useCaseModal } from '../components/layout/Layout';
 import { useTheme } from '../context/ThemeContext';
+import api from '../services/api';
 
-// ── Data sets keyed by date-range so every chart + KPI changes on switch ──
+// ── Fallback datasets keyed by date-range for zero-latency initial render ──
 const DATA_BY_RANGE = {
   'Last 7 Days': {
     kpi: {
@@ -286,8 +289,7 @@ const DATA_BY_RANGE = {
   },
 };
 
-// Recent Activity Feed (same across ranges — it's a "live" feed)
-const RECENT_ACTIVITIES = [
+const DEFAULT_ACTIVITIES = [
   {
     id: 'ACT-1',
     caseId: 'CT-2026-002',
@@ -297,8 +299,7 @@ const RECENT_ACTIVITIES = [
     time: '2 min ago',
     tag: 'Critical',
     tagColor: 'bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400 border-red-200 dark:border-red-900',
-    icon: FileText,
-    iconColor: 'bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400',
+    iconType: 'FileText',
   },
   {
     id: 'ACT-2',
@@ -309,8 +310,7 @@ const RECENT_ACTIVITIES = [
     time: '12 min ago',
     tag: 'AI Alert',
     tagColor: 'bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400 border-purple-200 dark:border-purple-900',
-    icon: Target,
-    iconColor: 'bg-purple-100 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400',
+    iconType: 'Target',
   },
   {
     id: 'ACT-3',
@@ -321,20 +321,18 @@ const RECENT_ACTIVITIES = [
     time: '28 min ago',
     tag: 'Freezed',
     tagColor: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900',
-    icon: CheckCircle2,
-    iconColor: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400',
+    iconType: 'CheckCircle2',
   },
   {
     id: 'ACT-4',
     caseId: 'CT-2034-007',
     type: 'Evidence',
     title: 'CDR & IP logs uploaded',
-    detail: '3 evidence files verified • Assigned to Inspector Raj',
+    detail: '3 evidence files verified • Cryptographic hash signed',
     time: '1 hour ago',
     tag: 'Evidence',
     tagColor: 'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 border-blue-200 dark:border-blue-900',
-    icon: Activity,
-    iconColor: 'bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400',
+    iconType: 'Activity',
   },
 ];
 
@@ -343,19 +341,122 @@ export default function Dashboard() {
   const { openCaseModal } = useCaseModal();
   const { isDark } = useTheme();
 
+  // Filter States
   const [dateRange, setDateRange] = useState('Last 7 Days');
-  const [pinnedCards, setPinnedCards] = useState({});
-  const [expandedCard, setExpandedCard] = useState(null);
+  const [selectedState, setSelectedState] = useState('All India');
+  const [selectedFraudType, setSelectedFraudType] = useState('All Types');
 
-  // Derive all data from selected dateRange
-  const D = DATA_BY_RANGE[dateRange] || DATA_BY_RANGE['Last 7 Days'];
+  // Interactive UI States
+  const [pinnedCards, setPinnedCards] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('cybertrace_pinned_dashboard_cards') || '{}');
+    } catch {
+      return {};
+    }
+  });
+  const [expandedCard, setExpandedCard] = useState(null);
+  const [isFetching, setIsFetching] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(null);
+  const [liveData, setLiveData] = useState(null);
+
+  // Fetch Live Analytics from Backend API
+  const fetchDashboardData = useCallback(async () => {
+    setIsFetching(true);
+    try {
+      const res = await api.get('/analytics/dashboard', {
+        params: {
+          time_range: dateRange,
+          state: selectedState,
+          fraud_type: selectedFraudType,
+        },
+      });
+      if (res.data && res.data.status === 'success') {
+        setLiveData(res.data);
+        setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      }
+    } catch (err) {
+      console.warn('Backend analytics telemetry offline; falling back to calibrated dataset:', err);
+    } finally {
+      setIsFetching(false);
+    }
+  }, [dateRange, selectedState, selectedFraudType]);
+
+  useEffect(() => {
+    fetchDashboardData();
+    // Background heartbeat telemetry sync every 45s
+    const timer = setInterval(() => {
+      fetchDashboardData();
+    }, 45000);
+    return () => clearInterval(timer);
+  }, [fetchDashboardData]);
+
+  // Combine Live Data or Fallback
+  const fallback = DATA_BY_RANGE[dateRange] || DATA_BY_RANGE['Last 7 Days'];
+  const D = useMemo(() => {
+    if (!liveData) return fallback;
+    return {
+      kpi: liveData.kpi || fallback.kpi,
+      caseTrend: liveData.caseTrend || fallback.caseTrend,
+      fraudType: liveData.fraudType || fallback.fraudType,
+      fraudTotal: liveData.fraudTotal || fallback.fraudTotal,
+      cityRisk: liveData.cityRisk || fallback.cityRisk,
+      timeWindow: liveData.timeWindow || fallback.timeWindow,
+      peakWindow: liveData.peakWindow || fallback.peakWindow,
+      modelAccuracy: liveData.modelAccuracy || fallback.modelAccuracy,
+      f1Score: liveData.f1Score || fallback.f1Score,
+      clusterDrift: liveData.clusterDrift || fallback.clusterDrift,
+      pipeline: liveData.pipeline || fallback.pipeline,
+      avgResolution: liveData.avgResolution || fallback.avgResolution,
+      totalRecovered: liveData.totalRecovered || fallback.totalRecovered,
+      centroid: liveData.centroid || fallback.centroid,
+    };
+  }, [liveData, fallback]);
+
+  const activities = useMemo(() => {
+    return liveData?.recentActivities || DEFAULT_ACTIVITIES;
+  }, [liveData]);
 
   const togglePin = (cardId, e) => {
     e.stopPropagation();
-    setPinnedCards((prev) => ({
-      ...prev,
-      [cardId]: !prev[cardId],
-    }));
+    setPinnedCards((prev) => {
+      const updated = { ...prev, [cardId]: !prev[cardId] };
+      try {
+        localStorage.setItem('cybertrace_pinned_dashboard_cards', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+      return updated;
+    });
+  };
+
+  const exportTelemetryReport = () => {
+    const csvContent = [
+      ['CyberTrace AI — Operational Telemetry Export'],
+      ['Generated At', new Date().toISOString()],
+      ['Time Window', dateRange],
+      ['Region Filter', selectedState],
+      ['Category Filter', selectedFraudType],
+      [],
+      ['KPI Metrics', 'Value', 'Trend'],
+      ['Total Cases', D.kpi.totalCases, D.kpi.totalTrend],
+      ['Active Investigations', D.kpi.activeInvest, D.kpi.activeTrend],
+      ['High Risk Alerts', D.kpi.highRiskAlerts, D.kpi.riskTrend],
+      ['Model Accuracy', D.kpi.accuracy, D.kpi.accTrend],
+      [],
+      ['City', 'Threat Risk Score (%)', 'Active Case Count'],
+      ...D.cityRisk.map((c) => [c.city, c.risk, c.cases]),
+    ]
+      .map((row) => row.join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `CyberTrace_Telemetry_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const chartTheme = {
@@ -365,54 +466,115 @@ export default function Dashboard() {
     tooltipBorder: isDark ? '#334155' : '#e2e8f0',
   };
 
+  const renderActivityIcon = (iconType) => {
+    switch (iconType) {
+      case 'Target':
+        return <Target className="w-4 h-4 text-purple-600 dark:text-purple-400" />;
+      case 'CheckCircle2':
+        return <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
+      case 'Activity':
+        return <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
+      case 'Lock':
+        return <Lock className="w-4 h-4 text-red-600 dark:text-red-400" />;
+      default:
+        return <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
+    }
+  };
+
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto select-none transition-colors duration-200">
-      {/* 1. Header Bar: Title, Range Selector & Quick Actions */}
+    <div className="space-y-6 max-w-[1600px] mx-auto select-none transition-colors duration-200 pb-10">
+      {/* 1. Header Bar: Title, Range Selector & Dynamic Multi-Filter Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              Dashboard
+              Executive Dashboard
             </h1>
-            <span className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900">
+            <span className="text-[11px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
               LIVE TELEMETRY
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-normal">
-            Real-time analytics, predictive cash-out telemetry, and case status pipeline
+            Real-time cybercrime forecasting, spatial withdrawal prediction, and asset recovery funnel
           </p>
         </div>
 
-        {/* Date Selector & Export Actions */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs">
-            <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-            <span>01 Oct 2026 - 12 Oct 2026</span>
+        {/* Date Selector, Filter Bar & Quick Export */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* State / Region Dropdown */}
+          <div className="relative">
+            <select
+              value={selectedState}
+              onChange={(e) => setSelectedState(e.target.value)}
+              className="appearance-none bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl px-3 py-2 pr-7 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+            >
+              <option>All India</option>
+              <option>Gujarat</option>
+              <option>Maharashtra</option>
+              <option>Delhi NCR</option>
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
+          {/* Fraud Type Filter */}
+          <div className="relative">
+            <select
+              value={selectedFraudType}
+              onChange={(e) => setSelectedFraudType(e.target.value)}
+              className="appearance-none bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl px-3 py-2 pr-7 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+            >
+              <option>All Types</option>
+              <option>Investment Scam</option>
+              <option>UPI Fraud</option>
+              <option>Phishing Ring</option>
+              <option>Fake Job / Loan</option>
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+
+          {/* Time Window Range */}
           <div className="relative">
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
-              className="appearance-none bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl px-3.5 py-2 pr-8 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+              className="appearance-none bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl px-3 py-2 pr-7 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
             >
               <option>Last 7 Days</option>
               <option>Last 30 Days</option>
               <option>This Quarter</option>
               <option>FY 2026-27</option>
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
+          {/* Refresh Button */}
           <button
-            onClick={() => navigate('/complaints')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs hover:shadow-md transition cursor-pointer"
+            onClick={fetchDashboardData}
+            title="Refresh live telemetry"
+            className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs transition cursor-pointer"
           >
-            <span>Complaints</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-blue-500' : ''}`} />
+          </button>
+
+          {/* Export Report */}
+          <button
+            onClick={exportTelemetryReport}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Export</span>
           </button>
         </div>
       </div>
+
+      {/* Sync Status Banner */}
+      {lastSyncTime && (
+        <div className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center justify-between px-1">
+          <span>Targeting Sector: <strong>{selectedState}</strong> • Category: <strong>{selectedFraudType}</strong></span>
+          <span>Last telemetry sync: <strong className="text-slate-600 dark:text-slate-300">{lastSyncTime}</strong></span>
+        </div>
+      )}
 
       {/* 2. KPI Cards Row with Sparklines (Pinterest Bento Style) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -431,7 +593,7 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
                 <ArrowUpRight className="w-3.5 h-3.5" />
-                <span>{D.kpi.totalTrend} {D.kpi.totalTrendLabel}</span>
+                <span>{D.kpi.totalTrend} {D.kpi.totalTrendLabel || ''}</span>
               </div>
             </div>
             {/* SVG Sparkline */}
@@ -458,7 +620,7 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
                 <ArrowUpRight className="w-3.5 h-3.5" />
-                <span>{D.kpi.activeTrend} {D.kpi.activeTrendLabel}</span>
+                <span>{D.kpi.activeTrend} {D.kpi.activeTrendLabel || ''}</span>
               </div>
             </div>
             <div className="w-16 h-8 shrink-0">
@@ -484,7 +646,7 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-1 text-[11px] font-semibold text-red-500 dark:text-red-400 mt-1">
                 <ArrowUpRight className="w-3.5 h-3.5" />
-                <span>{D.kpi.riskTrend} {D.kpi.riskTrendLabel}</span>
+                <span>{D.kpi.riskTrend} {D.kpi.riskTrendLabel || ''}</span>
               </div>
             </div>
             <div className="w-16 h-8 shrink-0">
@@ -510,7 +672,7 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
                 <ArrowUpRight className="w-3.5 h-3.5" />
-                <span>{D.kpi.accTrend} {D.kpi.accTrendLabel}</span>
+                <span>{D.kpi.accTrend} {D.kpi.accTrendLabel || ''}</span>
               </div>
             </div>
             <div className="w-16 h-8 shrink-0">
@@ -522,7 +684,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 3. Bento Grid: Main Analytics Cards (NO map!) */}
+      {/* 3. Bento Grid: Main Analytics Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Card A: Case Trends Line Chart (Registered vs Resolved) - col-span-8 */}
         <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800/80 p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
@@ -537,11 +699,11 @@ export default function Dashboard() {
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Monthly trend of cybercrime complaints and successful recoveries
+                Monthly trajectory of registered cyber complaints versus successful interventions
               </p>
             </div>
 
-            {/* Pin & Maximize buttons (Pinterest feature) */}
+            {/* Pin & Maximize buttons */}
             <div className="flex items-center gap-1.5">
               <button
                 onClick={(e) => togglePin('trend', e)}
@@ -611,7 +773,7 @@ export default function Dashboard() {
             </div>
             <button
               onClick={() => setExpandedCard('fraud')}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer"
               title="Expand view"
             >
               <Maximize2 className="w-3.5 h-3.5" />
@@ -684,7 +846,7 @@ export default function Dashboard() {
             </div>
             <button
               onClick={() => navigate('/map')}
-              className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+              className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer"
             >
               <span>View Map</span>
               <ArrowUpRight className="w-3 h-3" />
@@ -818,46 +980,110 @@ export default function Dashboard() {
 
         {/* Card F: Case Status Pipeline / Funnel - col-span-6 */}
         <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800/80 p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                Investigation Pipeline & Recovery Funnel
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Conversion of registered cyber complaints into asset recoveries
-              </p>
-            </div>
-            <Layers className="w-4 h-4 text-indigo-500" />
-          </div>
-
-          {/* Funnel Progress Steps */}
-          <div className="space-y-3 pt-3">
-            {D.pipeline.map((step) => (
-              <div key={step.stage} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{step.stage}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{step.count} cases</span>
-                    <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 font-mono">({step.pct})</span>
-                  </div>
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Investigation Pipeline & Recovery Funnel
+                  </h2>
+                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-900">
+                    6-Tier Funnel
+                  </span>
                 </div>
-                <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full ${step.color} rounded-full transition-all duration-500`}
-                    style={{ width: step.pct }}
-                  />
-                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Conversion trajectory from intake to mule freeze and asset recovery
+                </p>
               </div>
-            ))}
+              <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                <Layers className="w-4 h-4" />
+              </div>
+            </div>
+
+            {/* Quick Conversion KPI Summary Bar */}
+            <div className="grid grid-cols-3 gap-2.5 my-3">
+              <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5 border border-slate-100 dark:border-slate-800 text-center">
+                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Intake Yield</span>
+                <span className="text-xs sm:text-sm font-extrabold text-blue-600 dark:text-blue-400">100% ➔ 11%</span>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5 border border-slate-100 dark:border-slate-800 text-center">
+                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Mule Intercept</span>
+                <span className="text-xs sm:text-sm font-extrabold text-cyan-600 dark:text-cyan-400">43% Freezed</span>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5 border border-slate-100 dark:border-slate-800 text-center">
+                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Avg SLA</span>
+                <span className="text-xs sm:text-sm font-extrabold text-emerald-600 dark:text-emerald-400">{D.avgResolution}</span>
+              </div>
+            </div>
+
+            {/* Stepped Funnel Progress Visuals */}
+            <div className="space-y-2">
+              {D.pipeline.map((step, idx) => {
+                const gradients = [
+                  "from-blue-600 to-indigo-600",
+                  "from-indigo-600 to-blue-500",
+                  "from-cyan-500 to-teal-500",
+                  "from-amber-500 to-orange-500",
+                  "from-purple-500 to-pink-500",
+                  "from-emerald-500 to-teal-500",
+                ];
+                const bgGradients = [
+                  "bg-blue-50/40 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900/40",
+                  "bg-indigo-50/40 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/40",
+                  "bg-cyan-50/40 dark:bg-cyan-950/20 border-cyan-100 dark:border-cyan-900/40",
+                  "bg-amber-50/40 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/40",
+                  "bg-purple-50/40 dark:bg-purple-950/20 border-purple-100 dark:border-purple-900/40",
+                  "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/40",
+                ];
+                const grad = gradients[idx % gradients.length];
+                const cardBg = bgGradients[idx % bgGradients.length];
+
+                return (
+                  <div key={step.stage} className={`p-2.5 rounded-xl border ${cardBg} transition-all hover:shadow-xs group`}>
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-lg bg-white dark:bg-slate-800 shadow-2xs text-[10px] font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center font-mono border border-slate-200/60 dark:border-slate-700">
+                          {idx + 1}
+                        </span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                          {step.stage}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-semibold">
+                          {step.count.toLocaleString()} cases
+                        </span>
+                        <span className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 border border-slate-200/80 dark:border-slate-700 shadow-2xs">
+                          {step.pct}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Funnel Progress Track */}
+                    <div className="w-full h-2.5 bg-slate-200/70 dark:bg-slate-800/80 rounded-full overflow-hidden p-0.5">
+                      <div
+                        className={`h-full bg-gradient-to-r ${grad} rounded-full transition-all duration-700 shadow-xs`}
+                        style={{ width: step.pct }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-            <span>Average Resolution Time: <strong>{D.avgResolution}</strong></span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{D.totalRecovered}</span>
+          <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-slate-400" />
+              <span>Average Resolution: <strong className="text-slate-700 dark:text-slate-200">{D.avgResolution}</strong></span>
+            </span>
+            <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800">
+              {D.totalRecovered}
+            </span>
           </div>
         </div>
 
-        {/* Card G: Recent Activity Feed - col-span-6 */}
+        {/* Card G: Live Intelligence Feed - col-span-6 */}
         <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800/80 p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
             <div>
@@ -870,7 +1096,7 @@ export default function Dashboard() {
             </div>
             <button
               onClick={() => navigate('/alerts')}
-              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer"
             >
               <span>View All Alerts</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -879,39 +1105,36 @@ export default function Dashboard() {
 
           {/* Activity Items */}
           <div className="space-y-3 pt-2">
-            {RECENT_ACTIVITIES.map((act) => {
-              const Icon = act.icon;
-              return (
-                <div
-                  key={act.id}
-                  onClick={() => openCaseModal(act.caseId)}
-                  className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition cursor-pointer border border-transparent hover:border-slate-200/60 dark:hover:border-slate-700/60 group"
-                >
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${act.iconColor}`}>
-                    <Icon className="w-4 h-4" />
+            {activities.map((act) => (
+              <div
+                key={act.id}
+                onClick={() => openCaseModal(act.caseId)}
+                className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition cursor-pointer border border-transparent hover:border-slate-200/60 dark:hover:border-slate-700/60 group"
+              >
+                <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 mt-0.5">
+                  {renderActivityIcon(act.iconType)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate">
+                      {act.title}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium shrink-0 ml-2">{act.time}</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate">
-                        {act.title}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-medium shrink-0 ml-2">{act.time}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
-                      {act.detail}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <span className="font-mono text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.2 rounded border border-blue-200 dark:border-blue-900">
-                        {act.caseId}
-                      </span>
-                      <span className={`text-[10px] font-semibold px-2 py-0.2 rounded border ${act.tagColor}`}>
-                        {act.tag}
-                      </span>
-                    </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
+                    {act.detail}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="font-mono text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.2 rounded border border-blue-200 dark:border-blue-900">
+                      {act.caseId}
+                    </span>
+                    <span className={`text-[10px] font-semibold px-2 py-0.2 rounded border ${act.tagColor}`}>
+                      {act.tag}
+                    </span>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
 
           <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">

@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import {
   ShieldCheck, Lock, Download, Calendar, ChevronDown, UserCheck,
   AlertTriangle, FileCheck, Activity, CheckCircle2, Eye, Zap,
@@ -46,7 +46,7 @@ export default function SecurityCenter() {
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 ml-12">Access logs, security events, evidence integrity and compliance</p>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border border-emerald-200 dark:border-emerald-800 text-xs font-bold">
             <span className="w-2 h-2 rounded-full bg-emerald-500" /><span>System Secure</span>
           </div>
@@ -56,7 +56,7 @@ export default function SecurityCenter() {
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
-          <button onClick={() => alert("Exporting SHA-256 audit logs...")} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 transition">
+          <button onClick={() => alert("Exporting SHA-256 audit logs...")} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 transition cursor-pointer">
             <Download className="w-3.5 h-3.5 text-blue-600" /><span>Export Logs</span>
           </button>
         </div>
@@ -84,10 +84,10 @@ export default function SecurityCenter() {
         ))}
       </div>
 
-      <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-700 pb-3">
+      <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-700 pb-3 overflow-x-auto no-scrollbar">
         {["Access Logs", "Security Events", "Evidence Integrity", "API Usage"].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === tab ? "bg-blue-600 text-white shadow-xs" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"}`}>
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 whitespace-nowrap cursor-pointer ${activeTab === tab ? "bg-blue-600 text-white shadow-xs" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"}`}>
             {tab}
           </button>
         ))}
@@ -171,8 +171,8 @@ export default function SecurityCenter() {
             <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Recent Security Events</h3>
             <span className="text-[11px] text-slate-400 font-mono bg-slate-50 dark:bg-slate-700 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-600">SHA-256 Hash Chain Verified</span>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div className="overflow-x-auto -mx-0.5">
+            <table className="w-full text-left text-xs min-w-[640px]">
               <thead className="bg-slate-50/80 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-semibold uppercase text-[11px] tracking-wider">
                 <tr>
                   <th className="py-3 px-4">Timestamp</th>

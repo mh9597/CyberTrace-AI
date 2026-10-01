@@ -28,6 +28,13 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
+class UserUpdateRequest(BaseModel):
+    full_name: Optional[str] = None
+    role: Optional[str] = None
+    badge_number: Optional[str] = None
+    password: Optional[str] = None
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

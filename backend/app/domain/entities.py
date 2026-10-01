@@ -17,6 +17,8 @@ class UserPrincipal(BaseModel):
     username: str
     role: str  # 'analyst', 'investigator', 'admin'
     police_station_id: Optional[str] = None
+    full_name: Optional[str] = None
+    email: Optional[str] = None
 
     class Config:
         frozen = True

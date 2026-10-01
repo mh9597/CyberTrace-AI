@@ -58,6 +58,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (profileData) => {
+    setLoading(true);
+    try {
+      const res = await api.put('/auth/me', profileData);
+      const updatedUser = res.data;
+      localStorage.setItem('cybertrace_user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      return { success: true, user: updatedUser };
+    } catch (err) {
+      return {
+        success: false,
+        error: err.response?.data?.detail || 'Failed to update profile. Please try again.',
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       await api.post('/auth/logout');
@@ -70,7 +88,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ user, setUser, login, signup, logout, updateProfile, loading }}>
       {children}
     </AuthContext.Provider>
   );
