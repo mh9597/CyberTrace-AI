@@ -304,7 +304,8 @@ export default function IntelligenceMapCanvas({
   engine: propEngine,
   onEngineChange,
 }) {
-  const [internalEngine, setInternalEngine] = useState('google');
+  const [internalEngine, setInternalEngine] = useState('leaflet');
+  const [googleAuthError, setGoogleAuthError] = useState(false);
   const activeEngine = propEngine || internalEngine;
 
   const [currentCoords, setCurrentCoords] = useState({ lat: 23.0300, lng: 72.5178 });
@@ -332,7 +333,7 @@ export default function IntelligenceMapCanvas({
     }
   }, [onCoordinatesChange]);
 
-  const handleEngineSwitch = (target) => {
+  const handleEngineSwitch = useCallback((target) => {
     setInternalEngine(target);
     if (onEngineChange) onEngineChange(target);
 
@@ -346,7 +347,54 @@ export default function IntelligenceMapCanvas({
         leafletMapInstance.current.setView([currentCoords.lat, currentCoords.lng]);
       }
     }, 100);
-  };
+  }, [currentCoords, onEngineChange]);
+
+  // Automatic Google Maps error detection (domain restrictions, RefererNotAllowedMapError)
+  useEffect(() => {
+    const prevAuthFailure = window.gm_authFailure;
+    window.gm_authFailure = () => {
+      console.warn('Google Maps authentication failed (domain referrer restriction). Auto-switching to Leaflet OSM.');
+      setGoogleAuthError(true);
+      handleEngineSwitch('leaflet');
+      if (typeof prevAuthFailure === 'function') prevAuthFailure();
+    };
+
+    let observer = null;
+    const checkErrorOverlay = () => {
+      if (!googleContainerRef.current) return false;
+      const hasErrorEl =
+        googleContainerRef.current.querySelector('.gm-err-container') ||
+        googleContainerRef.current.querySelector('.gm-err-message');
+      const hasErrorText =
+        googleContainerRef.current.innerText &&
+        googleContainerRef.current.innerText.includes('Oops! Something went wrong');
+
+      if (hasErrorEl || hasErrorText) {
+        console.warn('Google Maps error container detected in DOM. Auto-switching to Leaflet OSM.');
+        setGoogleAuthError(true);
+        handleEngineSwitch('leaflet');
+        return true;
+      }
+      return false;
+    };
+
+    if (googleContainerRef.current) {
+      observer = new MutationObserver(() => {
+        checkErrorOverlay();
+      });
+      observer.observe(googleContainerRef.current, { childList: true, subtree: true });
+    }
+
+    const interval = setInterval(checkErrorOverlay, 800);
+    const timeout = setTimeout(() => clearInterval(interval), 6000);
+
+    return () => {
+      if (observer) observer.disconnect();
+      clearInterval(interval);
+      clearTimeout(timeout);
+      window.gm_authFailure = prevAuthFailure;
+    };
+  }, [handleEngineSwitch]);
 
   // Filter hotspots based on risk filter & region selection
   const visibleHotspots = useMemo(() => {
@@ -1052,6 +1100,16 @@ export default function IntelligenceMapCanvas({
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
           <span>{activeEngine === 'google' ? 'Google Maps JavaScript API' : 'Leaflet + OpenStreetMap GIS'}</span>
         </div>
+
+        {/* Google Maps Restriction Alert if fallback triggered */}
+        {googleAuthError && activeEngine === 'leaflet' && (
+          <div className="bg-amber-50/95 dark:bg-amber-950/90 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 px-3 py-1 rounded-xl text-[11px] font-medium flex items-center gap-1.5 shadow-xs backdrop-blur-md animate-in fade-in">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span>
+              Google Maps domain restricted on Vercel. Auto-switched to <strong>Leaflet OpenStreetMap</strong>.
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Map Control Buttons (Top-Right) */}

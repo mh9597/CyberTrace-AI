@@ -29,7 +29,7 @@ export default function IntelligenceMap() {
   const [selectedDistrict, setSelectedDistrict] = useState('Ahmedabad');
   const [selectedRisk, setSelectedRisk] = useState('All Levels');
   const [activeViewMode, setActiveViewMode] = useState('Heatmap View');
-  const [mapEngine, setMapEngine] = useState('google'); // 'google' | 'leaflet'
+  const [mapEngine, setMapEngine] = useState('leaflet'); // 'leaflet' (OpenStreetMap - 100% reliable on Vercel) | 'google'
   const [showPopup, setShowPopup] = useState(true);
   const [selectedHotspot, setSelectedHotspot] = useState(HOTSPOTS[0]);
   const [coordsDisplay, setCoordsDisplay] = useState('23.0300° N, 72.5178° E');
