@@ -88,14 +88,28 @@ export default function Landing() {
             </a>
           </div>
 
-          {/* Action CTA */}
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all"
-          >
-            <span>Get Started</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          {/* Action CTAs */}
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => navigate('/login')}
+              className="px-4 py-2 rounded-full border border-slate-200/90 hover:border-blue-500 bg-white/80 hover:bg-white text-slate-700 hover:text-blue-600 text-xs font-semibold shadow-xs transition-all"
+            >
+              Officer Login
+            </button>
+            <button
+              onClick={() => navigate('/register')}
+              className="px-4 py-2 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition-all"
+            >
+              Register
+            </button>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all"
+            >
+              <span>Terminal</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -144,21 +158,36 @@ export default function Landing() {
               </p>
 
               {/* Buttons */}
-              <div className="flex flex-wrap items-center gap-4 pt-2">
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 transition-all"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Officer Login</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  onClick={() => navigate('/register')}
+                  className="flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold shadow-xs transition-all"
+                >
+                  <span>Register Account</span>
+                </button>
+
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 transition-all"
+                  className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/90 hover:bg-white text-slate-700 text-xs sm:text-sm font-semibold border border-slate-200 shadow-xs hover:border-slate-300 transition-all backdrop-blur-md"
                 >
-                  <span>Get Started</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>Live Terminal</span>
                 </button>
 
                 <button
                   onClick={() => setShowDemoVideo(true)}
-                  className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white/90 hover:bg-white text-slate-700 text-xs sm:text-sm font-semibold border border-slate-200 shadow-xs hover:border-slate-300 transition-all backdrop-blur-md"
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition-all"
                 >
                   <Play className="w-4 h-4 text-blue-600 fill-blue-600" />
-                  <span>Watch Demo</span>
+                  <span>Demo</span>
                 </button>
               </div>
             </div>

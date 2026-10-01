@@ -10,6 +10,7 @@ import TransactionNetwork from '../pages/TransactionNetwork';
 import Alerts from '../pages/Alerts';
 import SecurityCenter from '../pages/SecurityCenter';
 import Login from '../pages/Login';
+import Register from '../pages/Register';
 
 export default function AppRoutes() {
   return (
@@ -20,6 +21,7 @@ export default function AppRoutes() {
 
       {/* Auth */}
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
       {/* 2-8. Authenticated App Pages matching Panels 2-8 */}
       <Route element={<Layout />}>

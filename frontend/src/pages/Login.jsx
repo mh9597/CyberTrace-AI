@@ -71,7 +71,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault(); setError('');
     const res = await login(email, password);
-    if (res.success) navigate('/'); else setError(res.error);
+    if (res.success) navigate('/dashboard'); else setError(res.error);
   };
 
   return (
@@ -453,6 +453,29 @@ export default function Login() {
               </svg>
               Continue with Microsoft
             </button>
+          </div>
+
+          {/* New Officer Register Link */}
+          <div style={{
+            marginTop: '16px',
+            paddingTop: '14px',
+            borderTop: '1px solid #E5E7EB',
+            textAlign: 'center',
+            fontSize: '13px',
+            color: '#4B5563',
+          }}>
+            New Law Enforcement Officer / Cyber Cell?{' '}
+            <span
+              onClick={() => navigate('/register')}
+              style={{
+                color: '#2563EB',
+                fontWeight: '700',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              }}
+            >
+              Register Officer Account
+            </span>
           </div>
         </div>
       </div>

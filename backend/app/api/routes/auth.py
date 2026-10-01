@@ -2,9 +2,9 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.app.db.database import get_db
-from backend.app.core.security import verify_password, create_access_token
+from backend.app.core.security import verify_password, get_password_hash, create_access_token
 from backend.app.models.user import User
-from backend.app.schemas.auth import LoginRequest, TokenResponse, UserResponse
+from backend.app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserResponse
 from backend.app.services.audit_service import log_audit_event
 from backend.app.api.deps import get_current_user
 
@@ -44,6 +44,43 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         access_token=token,
         token_type="bearer",
         user=UserResponse.model_validate(user),
+    )
+
+
+@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+def register(request: RegisterRequest, db: Session = Depends(get_db)):
+    existing = db.query(User).filter(User.email == request.email).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An officer with this email is already registered in CyberTrace",
+        )
+
+    new_user = User(
+        email=request.email,
+        full_name=request.full_name,
+        role=request.role,
+        badge_number=request.badge_number,
+        hashed_password=get_password_hash(request.password),
+        is_active=True,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    token = create_access_token(subject=new_user.email)
+    log_audit_event(
+        db=db,
+        action="AUTH_REGISTER_SUCCESS",
+        user_id=new_user.id,
+        user_email=new_user.email,
+        outcome="SUCCESS",
+        details=f"New officer registered with role: {new_user.role}",
+    )
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        user=UserResponse.model_validate(new_user),
     )
 
 
