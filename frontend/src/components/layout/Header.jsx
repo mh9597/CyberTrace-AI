@@ -8,6 +8,8 @@ import {
   Sun,
   Moon,
   ChevronDown,
+  Globe,
+  AlertTriangle,
   User,
   LogOut,
   ExternalLink,
@@ -19,7 +21,6 @@ import AIAssistantDrawer from '../common/AIAssistantDrawer';
 
 export default function Header({ onSearch }) {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,6 +72,16 @@ export default function Header({ onSearch }) {
 
         {/* Right: Quick Actions, AI Copilot, Theme Toggle & Officer Profile */}
         <div className="flex items-center gap-3">
+          {/* Landing Page Portal Link */}
+          <Link
+            to="/landing"
+            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/80 dark:hover:bg-slate-800/80 transition border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+            title="View Public Portal Landing Page"
+          >
+            <Globe className="w-3.5 h-3.5 text-blue-500" />
+            <span className="hidden xl:inline">Portal</span>
+          </Link>
+
           {/* Ask CyberTrace AI Button */}
           <button
             onClick={() => setIsAssistantOpen(true)}

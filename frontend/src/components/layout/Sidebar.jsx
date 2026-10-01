@@ -8,6 +8,7 @@ import {
   Share2,
   AlertTriangle,
   ShieldCheck,
+  Cpu,
 } from 'lucide-react';
 
 const navigationItems = [
@@ -22,7 +23,7 @@ const navigationItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-60 bg-[#F4F7FC] dark:bg-slate-950 border-r border-slate-200/60 dark:border-slate-800/80 flex flex-col justify-between pt-3 pb-0 shrink-0 select-none z-30 relative overflow-hidden transition-colors duration-200">
+    <aside className="w-60 bg-[#F4F7FC] dark:bg-slate-950 border-r border-slate-200/60 dark:border-slate-800/80 flex flex-col justify-between pt-3 pb-4 shrink-0 select-none z-30 relative overflow-hidden transition-colors duration-200">
       <div className="space-y-4 relative z-10 px-3">
         {/* Navigation list */}
         <nav className="space-y-1">
@@ -56,13 +57,26 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* Bottom Heritage Wave Illustration */}
-      <div className="relative w-full mt-auto pointer-events-none select-none opacity-90 dark:opacity-40">
-        <img
-          src="/images/sidebar-bottom-wave.png"
-          alt="Indian Heritage Wave"
-          className="w-full h-auto object-contain"
-        />
+      {/* Bottom Officer / Engine Status */}
+      <div className="px-3 space-y-2 relative z-10">
+        <div className="p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 space-y-1 shadow-2xs">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium text-[11px]">
+              <Cpu className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span>RF-DBSCAN v2.7</span>
+            </span>
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400 text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800">
+              Active
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+            Gujarat Law Enforcement Node
+          </p>
+        </div>
+
+        <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium text-center">
+          CyberTrace AI &bull; SIH 2026
+        </div>
       </div>
     </aside>
   );

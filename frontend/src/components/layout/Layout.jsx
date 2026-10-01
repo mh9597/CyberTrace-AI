@@ -25,6 +25,17 @@ export default function Layout() {
   return (
     <CaseModalContext.Provider value={{ openCaseModal, closeCaseModal }}>
       <div className="min-h-screen bg-[#F4F7FC] dark:bg-slate-950 flex flex-col text-[#0F172A] dark:text-slate-100 font-sans relative overflow-x-hidden transition-colors duration-200">
+        {/* Ambient bottom-left fluid gradient wave matching reference image */}
+        <div
+          aria-hidden="true"
+          className="fixed -bottom-40 -left-20 w-[520px] h-[520px] pointer-events-none -z-0 opacity-70 dark:opacity-20"
+          style={{
+            background:
+              'radial-gradient(circle at 30% 70%, rgba(192, 132, 252, 0.45) 0%, rgba(253, 164, 175, 0.35) 35%, rgba(56, 189, 248, 0.25) 70%, transparent 100%)',
+            filter: 'blur(60px)',
+          }}
+        />
+
         {/* Global Top Header */}
         <Header />
 

@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import {
   AlertTriangle, Search, Filter, Calendar, ChevronDown, Clock,
   MapPin, ShieldAlert, CheckCircle2, ArrowRight, Bell, Zap,
