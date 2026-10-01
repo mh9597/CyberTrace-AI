@@ -24,25 +24,14 @@ export default function Layout() {
 
   return (
     <CaseModalContext.Provider value={{ openCaseModal, closeCaseModal }}>
-      <div className="min-h-screen bg-[#F7FAFF] flex flex-col text-[#0F172A] font-sans relative overflow-x-hidden">
-        {/* Ambient bottom-left fluid gradient wave matching reference image */}
-        <div
-          aria-hidden="true"
-          className="fixed -bottom-40 -left-20 w-[520px] h-[520px] pointer-events-none -z-0 opacity-70"
-          style={{
-            background:
-              'radial-gradient(circle at 30% 70%, rgba(192, 132, 252, 0.45) 0%, rgba(253, 164, 175, 0.35) 35%, rgba(56, 189, 248, 0.25) 70%, transparent 100%)',
-            filter: 'blur(60px)',
-          }}
-        />
-
+      <div className="min-h-screen bg-[#F4F7FC] dark:bg-slate-950 flex flex-col text-[#0F172A] dark:text-slate-100 font-sans relative overflow-x-hidden transition-colors duration-200">
         {/* Global Top Header */}
         <Header />
 
         {/* Body Layout: Sidebar + Main Content */}
         <div className="flex flex-1 overflow-hidden relative z-10">
           <Sidebar />
-          <main className="flex-1 overflow-y-auto p-6 lg:p-8 bg-[#F7FAFF]/80">
+          <main className="flex-1 overflow-y-auto p-5 lg:p-6 bg-[#F4F7FC] dark:bg-slate-950">
             <Outlet />
           </main>
         </div>
