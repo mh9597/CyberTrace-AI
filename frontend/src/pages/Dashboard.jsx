@@ -625,11 +625,11 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto select-none transition-colors duration-200 pb-10">
-      {/* 1. Header Bar: Title, Range Selector & Dynamic Multi-Filter Bar */}
+    <div className="space-y-6 max-w-7xl mx-auto select-none transition-colors duration-200 pb-10">
+      {/* 1. Header Bar: Title & Primary Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               {user?.role === 'investigator'
                 ? 'Investigator Operational Console'
@@ -673,21 +673,49 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Date Selector, Filter Bar & Quick Export */}
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Primary Action Buttons (Aligned cleanly on Top Row) */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            onClick={fetchDashboardData}
+            title="Refresh live telemetry data"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs transition cursor-pointer text-xs font-semibold"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-blue-500' : 'text-slate-400'}`} />
+            <span>Sync</span>
+          </button>
+
+          <button
+            onClick={exportTelemetryReport}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-500 text-white text-xs font-semibold shadow-xs hover:shadow-md transition cursor-pointer active:scale-95"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export Report</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Operations & Filter Control Toolbar (Oriented Bento Box) */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800/80 p-3.5 sm:p-4 shadow-2xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5">
+        {/* Left Side: Filter Selects */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 mr-1">
+            <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <span className="uppercase tracking-wider text-[10px]">Filter Scope</span>
+          </div>
+
           {/* State / Region Dropdown */}
           <div className="relative">
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="appearance-none bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl px-3 py-2 pr-7 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+              className="appearance-none bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3 py-2 pr-8 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
             >
               <option value="All India">All India (National)</option>
               {Object.keys(ALL_INDIAN_STATES).sort().map((st) => (
                 <option key={st} value={st}>{st}</option>
               ))}
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
           {/* Fraud Type Filter */}
@@ -695,7 +723,7 @@ export default function Dashboard() {
             <select
               value={selectedFraudType}
               onChange={(e) => setSelectedFraudType(e.target.value)}
-              className="appearance-none bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl px-3 py-2 pr-7 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+              className="appearance-none bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3 py-2 pr-8 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
             >
               <option value="All Types">All Types (All Categories)</option>
               <option value="Investment Scam">Investment Scam</option>
@@ -705,7 +733,7 @@ export default function Dashboard() {
               <option value="Card Cloning / OTP">Card Cloning / OTP</option>
               <option value="Cyber Extortion">Cyber Extortion</option>
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
           {/* Time Window Range */}
@@ -713,43 +741,31 @@ export default function Dashboard() {
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
-              className="appearance-none bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl px-3 py-2 pr-7 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+              className="appearance-none bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3 py-2 pr-8 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
             >
               <option>Last 7 Days</option>
               <option>Last 30 Days</option>
               <option>This Quarter</option>
               <option>FY 2026-27</option>
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
+        </div>
 
-          {/* Refresh Button */}
-          <button
-            onClick={fetchDashboardData}
-            title="Refresh live telemetry"
-            className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs transition cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-blue-500' : ''}`} />
-          </button>
-
-          {/* Export Report */}
-          <button
-            onClick={exportTelemetryReport}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Export</span>
-          </button>
+        {/* Right Side: Status Telemetry Meta */}
+        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-medium shrink-0 self-start lg:self-auto">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px]">
+              Sector: <strong className="text-slate-800 dark:text-slate-200 font-semibold">{selectedState}</strong>
+            </span>
+            <span className="text-slate-300 dark:text-slate-600">•</span>
+            <span className="text-[11px]">
+              Sync: <strong className="text-slate-800 dark:text-slate-200 font-semibold">{lastSyncTime || 'Active'}</strong>
+            </span>
+          </div>
         </div>
       </div>
-
-      {/* Sync Status Banner */}
-      {lastSyncTime && (
-        <div className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center justify-between px-1">
-          <span>Targeting Sector: <strong>{selectedState}</strong> • Category: <strong>{selectedFraudType}</strong></span>
-          <span>Last telemetry sync: <strong className="text-slate-600 dark:text-slate-300">{lastSyncTime}</strong></span>
-        </div>
-      )}
 
       {/* 2. KPI Cards Row with Sparklines (Pinterest Bento Style) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

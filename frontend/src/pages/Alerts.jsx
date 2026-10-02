@@ -309,7 +309,7 @@ export default function Alerts() {
       : "bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600";
 
   return (
-    <div className="space-y-5 max-w-[1600px] mx-auto pb-8">
+    <div className="space-y-5 max-w-7xl mx-auto pb-8">
       {/* Status toast banner */}
       {statusMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-xl border border-slate-700 animate-in fade-in slide-in-from-bottom-3 duration-200 text-xs font-semibold">

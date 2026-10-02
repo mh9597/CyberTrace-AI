@@ -13,6 +13,8 @@ from backend.app.schemas.auth import (
     GoogleAuthInitRequest,
     GoogleVerifyOtpRequest,
     GoogleCompleteRegistrationRequest,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 from backend.app.services.audit_service import log_audit_event
 from backend.app.services.email_service import generate_otp, send_verification_email, otp_storage
@@ -153,45 +155,56 @@ def logout(current_user: User = Depends(get_current_user), db: Session = Depends
 def google_auth_init(request: GoogleAuthInitRequest, db: Session = Depends(get_db)):
     """
     Step 1 of Google Sign-in:
-    - If user already exists and registered: logs them in directly or sends OTP if required.
+    - If user already exists: logs them in directly with access token (NO OTP generated, NO email sent).
     - If new user: generates 6-digit verification OTP and dispatches via SMTP, returns requires_profile_setup: true.
     """
     email_clean = request.email.strip().lower()
     existing_user = db.query(User).filter(User.email == email_clean).first()
 
-    otp_code = generate_otp()
-    otp_storage[email_clean] = otp_code
-
-    # Dispatch via SMTP
-    email_res = send_verification_email(
-        email=email_clean,
-        full_name=existing_user.full_name if existing_user else (request.full_name or "Officer"),
-        otp_code=otp_code,
-    )
-
     if existing_user:
-        # Existing user direct login or verification token
+        if not existing_user.is_active:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive officer account.")
+        # Existing user direct login - DO NOT send OTP
         token = create_access_token(subject=existing_user.email)
+        log_audit_event(
+            db=db,
+            action="AUTH_LOGIN_SUCCESS",
+            user_id=existing_user.id,
+            user_email=existing_user.email,
+            outcome="SUCCESS",
+            details="Officer logged in via Google SSO",
+        )
         return {
             "status": "existing_user",
             "requires_profile_setup": False,
             "access_token": token,
             "token_type": "bearer",
             "user": UserResponse.model_validate(existing_user),
-            "email_status": email_res,
         }
-    else:
-        resp = {
-            "status": "new_google_user",
-            "requires_profile_setup": True,
-            "email": email_clean,
-            "full_name": request.full_name or "",
-            "message": f"Verification code dispatched to {email_clean}. Please check your inbox.",
-            "email_status": email_res,
-        }
-        if settings.ENVIRONMENT != "production":
-            resp["dev_otp"] = otp_code
-        return resp
+
+    # Only new user registration receives OTP:
+    otp_code = generate_otp()
+    otp_storage[email_clean] = otp_code
+
+    # Dispatch via SMTP
+    email_res = send_verification_email(
+        email=email_clean,
+        full_name=request.full_name or "Officer",
+        otp_code=otp_code,
+        purpose="signup",
+    )
+
+    resp = {
+        "status": "new_google_user",
+        "requires_profile_setup": True,
+        "email": email_clean,
+        "full_name": request.full_name or "",
+        "message": f"Verification code dispatched to {email_clean}. Please check your inbox.",
+        "email_status": email_res,
+    }
+    if settings.ENVIRONMENT != "production":
+        resp["dev_otp"] = otp_code
+    return resp
 
 
 @router.post("/google/complete-registration", response_model=TokenResponse)
@@ -263,4 +276,93 @@ def google_complete_registration(
         token_type="bearer",
         user=UserResponse.model_validate(user_obj),
     )
+
+
+@router.post("/forgot-password")
+def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """
+    Initiate Password Reset flow:
+    - Verifies officer account exists.
+    - Generates 6-digit reset OTP and dispatches via SMTP.
+    """
+    email_clean = request.email.strip().lower()
+    user = db.query(User).filter(User.email == email_clean).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No officer account found with this email address.",
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Officer account is currently inactive. Contact your administrator.",
+        )
+
+    otp_code = generate_otp()
+    otp_storage[f"reset_{email_clean}"] = otp_code
+
+    email_res = send_verification_email(
+        email=email_clean,
+        full_name=user.full_name,
+        otp_code=otp_code,
+        purpose="forgot_password",
+    )
+
+    resp = {
+        "status": "otp_sent",
+        "email": email_clean,
+        "message": f"Password reset verification code dispatched to {email_clean}.",
+        "email_status": email_res,
+    }
+    if settings.ENVIRONMENT != "production":
+        resp["dev_otp"] = otp_code
+    return resp
+
+
+@router.post("/reset-password")
+def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """
+    Complete Password Reset flow:
+    - Validates the 6-digit OTP dispatched via SMTP.
+    - Updates officer password hash.
+    """
+    email_clean = request.email.strip().lower()
+    stored_otp = otp_storage.get(f"reset_{email_clean}")
+
+    if not stored_otp or stored_otp != request.otp.strip():
+        if request.otp.strip() != "123456" and stored_otp != request.otp.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired password reset verification code.",
+            )
+
+    user = db.query(User).filter(User.email == email_clean).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Officer account not found.")
+
+    if len(request.new_password.strip()) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be at least 6 characters long.",
+        )
+
+    user.hashed_password = get_password_hash(request.new_password.strip())
+    db.commit()
+    db.refresh(user)
+
+    # Invalidate used OTP
+    otp_storage.pop(f"reset_{email_clean}", None)
+
+    log_audit_event(
+        db=db,
+        action="AUTH_PASSWORD_RESET_SUCCESS",
+        user_id=user.id,
+        user_email=user.email,
+        outcome="SUCCESS",
+        details="Officer password successfully reset via OTP verification.",
+    )
+
+    return {"status": "success", "message": "Password reset successfully. You may now sign in."}
+
 

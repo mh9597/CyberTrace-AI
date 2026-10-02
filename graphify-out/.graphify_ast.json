@@ -309,7 +309,7 @@
       "label": "signup()",
       "file_type": "code",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L15",
+      "source_location": "L26",
       "_callable": true,
       "_origin": "ast"
     },
@@ -326,7 +326,7 @@
       "label": "login()",
       "file_type": "code",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L56",
+      "source_location": "L67",
       "_callable": true,
       "_origin": "ast"
     },
@@ -343,7 +343,7 @@
       "label": "get_current_officer()",
       "file_type": "code",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L92",
+      "source_location": "L103",
       "_callable": true,
       "_origin": "ast"
     },
@@ -368,7 +368,7 @@
       "label": "update_current_officer()",
       "file_type": "code",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L98",
+      "source_location": "L109",
       "_callable": true,
       "_origin": "ast"
     },
@@ -377,8 +377,42 @@
       "label": "logout()",
       "file_type": "code",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L129",
+      "source_location": "L140",
       "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_app_api_routes_auth_google_auth_init",
+      "label": "google_auth_init()",
+      "file_type": "code",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L153",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_app_api_routes_auth_google_complete_registration",
+      "label": "google_complete_registration()",
+      "file_type": "code",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L198",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_app_api_routes_auth_rationale_154",
+      "label": "Step 1 of Google Sign-in: - If user already exists and registered: logs them in…",
+      "file_type": "rationale",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L154",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_app_api_routes_auth_rationale_202",
+      "label": "Step 2 of Google Sign-in: Officer submits their Name, Police ID / Badge number,…",
+      "file_type": "rationale",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L202",
       "_origin": "ast"
     },
     {
@@ -1089,7 +1123,7 @@
       "label": ".normalize_database_url()",
       "file_type": "code",
       "source_file": "backend/app/core/config.py",
-      "source_location": "L37",
+      "source_location": "L45",
       "_callable": true,
       "_origin": "ast"
     },
@@ -1098,7 +1132,7 @@
       "label": ".parse_cors_origins()",
       "file_type": "code",
       "source_file": "backend/app/core/config.py",
-      "source_location": "L44",
+      "source_location": "L52",
       "_callable": true,
       "_origin": "ast"
     },
@@ -2290,6 +2324,36 @@
       "_origin": "ast"
     },
     {
+      "id": "backend_app_schemas_auth_googleauthinitrequest",
+      "label": "GoogleAuthInitRequest",
+      "file_type": "code",
+      "source_file": "backend/app/schemas/auth.py",
+      "source_location": "L44",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_app_schemas_auth_googleverifyotprequest",
+      "label": "GoogleVerifyOtpRequest",
+      "file_type": "code",
+      "source_file": "backend/app/schemas/auth.py",
+      "source_location": "L50",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_app_schemas_auth_googlecompleteregistrationrequest",
+      "label": "GoogleCompleteRegistrationRequest",
+      "file_type": "code",
+      "source_file": "backend/app/schemas/auth.py",
+      "source_location": "L55",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
       "id": "backend_app_schemas_complaint",
       "label": "complaint.py",
       "file_type": "code",
@@ -3410,6 +3474,15 @@
       "_origin": "ast"
     },
     {
+      "id": "backend_tests_test_auth_test_google_auth_init_and_registration_flow",
+      "label": "test_google_auth_init_and_registration_flow()",
+      "file_type": "code",
+      "source_file": "backend/tests/test_auth.py",
+      "source_location": "L157",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
       "id": "backend_tests_test_auth_rationale_6",
       "label": "Admin login with valid credentials returns 200, JWT token, and admin role.",
       "file_type": "rationale",
@@ -3511,6 +3584,14 @@
       "file_type": "rationale",
       "source_file": "backend/tests/test_auth.py",
       "source_location": "L151",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_test_auth_rationale_158",
+      "label": "Test full Google Sign-in onboarding flow: dispatch OTP, complete profile with…",
+      "file_type": "rationale",
+      "source_file": "backend/tests/test_auth.py",
+      "source_location": "L158",
       "_origin": "ast"
     },
     {
@@ -4487,11 +4568,27 @@
       "_origin": "ast"
     },
     {
+      "id": "frontend_package_dependencies_react_oauth_google",
+      "label": "@react-oauth/google",
+      "file_type": "code",
+      "source_file": "frontend/package.json",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
+      "id": "ref_react_oauth_google",
+      "label": "@react-oauth/google",
+      "file_type": "concept",
+      "source_file": "frontend/package.json",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
       "id": "frontend_package_dependencies_axios",
       "label": "axios",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L13",
+      "source_location": "L14",
       "_origin": "ast"
     },
     {
@@ -4499,7 +4596,7 @@
       "label": "axios",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L13",
+      "source_location": "L14",
       "_origin": "ast"
     },
     {
@@ -4507,7 +4604,7 @@
       "label": "clsx",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L14",
+      "source_location": "L15",
       "_origin": "ast"
     },
     {
@@ -4515,7 +4612,7 @@
       "label": "clsx",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L14",
+      "source_location": "L15",
       "_origin": "ast"
     },
     {
@@ -4523,7 +4620,7 @@
       "label": "leaflet",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L15",
+      "source_location": "L16",
       "_origin": "ast"
     },
     {
@@ -4531,7 +4628,7 @@
       "label": "leaflet",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L15",
+      "source_location": "L16",
       "_origin": "ast"
     },
     {
@@ -4539,7 +4636,7 @@
       "label": "lucide-react",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L16",
+      "source_location": "L17",
       "_origin": "ast"
     },
     {
@@ -4547,7 +4644,7 @@
       "label": "lucide-react",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L16",
+      "source_location": "L17",
       "_origin": "ast"
     },
     {
@@ -4555,7 +4652,7 @@
       "label": "react",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L17",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -4563,7 +4660,7 @@
       "label": "react",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L17",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -4571,7 +4668,7 @@
       "label": "react-dom",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L18",
+      "source_location": "L19",
       "_origin": "ast"
     },
     {
@@ -4579,7 +4676,7 @@
       "label": "react-dom",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L18",
+      "source_location": "L19",
       "_origin": "ast"
     },
     {
@@ -4587,7 +4684,7 @@
       "label": "react-leaflet",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L19",
+      "source_location": "L20",
       "_origin": "ast"
     },
     {
@@ -4595,7 +4692,7 @@
       "label": "react-leaflet",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L19",
+      "source_location": "L20",
       "_origin": "ast"
     },
     {
@@ -4603,7 +4700,7 @@
       "label": "react-router-dom",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L20",
+      "source_location": "L21",
       "_origin": "ast"
     },
     {
@@ -4611,7 +4708,7 @@
       "label": "react-router-dom",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L20",
+      "source_location": "L21",
       "_origin": "ast"
     },
     {
@@ -4619,7 +4716,7 @@
       "label": "recharts",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L21",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -4627,7 +4724,7 @@
       "label": "recharts",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L21",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -4635,7 +4732,7 @@
       "label": "tailwind-merge",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L22",
+      "source_location": "L23",
       "_origin": "ast"
     },
     {
@@ -4643,7 +4740,7 @@
       "label": "tailwind-merge",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L22",
+      "source_location": "L23",
       "_origin": "ast"
     },
     {
@@ -4651,7 +4748,7 @@
       "label": "devDependencies",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L24",
+      "source_location": "L25",
       "_origin": "ast"
     },
     {
@@ -4659,7 +4756,7 @@
       "label": "@types/react",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L25",
+      "source_location": "L26",
       "_origin": "ast"
     },
     {
@@ -4667,7 +4764,7 @@
       "label": "@types/react",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L25",
+      "source_location": "L26",
       "_origin": "ast"
     },
     {
@@ -4675,7 +4772,7 @@
       "label": "@types/react-dom",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L26",
+      "source_location": "L27",
       "_origin": "ast"
     },
     {
@@ -4683,7 +4780,7 @@
       "label": "@types/react-dom",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L26",
+      "source_location": "L27",
       "_origin": "ast"
     },
     {
@@ -4691,7 +4788,7 @@
       "label": "@vitejs/plugin-react",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L27",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -4699,7 +4796,7 @@
       "label": "@vitejs/plugin-react",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L27",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -4707,7 +4804,7 @@
       "label": "autoprefixer",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L28",
+      "source_location": "L29",
       "_origin": "ast"
     },
     {
@@ -4715,7 +4812,7 @@
       "label": "autoprefixer",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L28",
+      "source_location": "L29",
       "_origin": "ast"
     },
     {
@@ -4723,7 +4820,7 @@
       "label": "postcss",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L29",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -4731,7 +4828,7 @@
       "label": "postcss",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L29",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -4739,7 +4836,7 @@
       "label": "tailwindcss",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L30",
+      "source_location": "L31",
       "_origin": "ast"
     },
     {
@@ -4747,7 +4844,7 @@
       "label": "tailwindcss",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L30",
+      "source_location": "L31",
       "_origin": "ast"
     },
     {
@@ -4755,7 +4852,7 @@
       "label": "vite",
       "file_type": "code",
       "source_file": "frontend/package.json",
-      "source_location": "L31",
+      "source_location": "L32",
       "_origin": "ast"
     },
     {
@@ -4763,7 +4860,7 @@
       "label": "vite",
       "file_type": "concept",
       "source_file": "frontend/package.json",
-      "source_location": "L31",
+      "source_location": "L32",
       "_origin": "ast"
     },
     {
@@ -5127,7 +5224,7 @@
       "label": "NAV_ITEMS",
       "file_type": "code",
       "source_file": "frontend/src/components/layout/Header.jsx",
-      "source_location": "L36",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -5135,7 +5232,7 @@
       "label": "Header()",
       "file_type": "code",
       "source_file": "frontend/src/components/layout/Header.jsx",
-      "source_location": "L84",
+      "source_location": "L85",
       "_callable": true,
       "_origin": "ast"
     },
@@ -5390,7 +5487,7 @@
       "label": "Example()",
       "file_type": "code",
       "source_file": "frontend/src/components/ui/login-form.tsx",
-      "source_location": "L19",
+      "source_location": "L20",
       "_callable": true,
       "_origin": "ast"
     },
@@ -5471,7 +5568,7 @@
       "label": "useAuth()",
       "file_type": "code",
       "source_file": "frontend/src/context/AuthContext.jsx",
-      "source_location": "L111",
+      "source_location": "L170",
       "_callable": true,
       "_origin": "ast"
     },
@@ -6164,7 +6261,7 @@
       "label": "Login()",
       "file_type": "code",
       "source_file": "frontend/src/pages/Login.jsx",
-      "source_location": "L7",
+      "source_location": "L9",
       "_callable": true,
       "_origin": "ast"
     },
@@ -7939,7 +8036,29 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L8",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth",
+      "target": "backend_app_services_email_service",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth",
+      "target": "backend_app_core_config",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -7950,7 +8069,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L9",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -7960,7 +8079,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L14",
+      "source_location": "L25",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -7971,7 +8090,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L15",
+      "source_location": "L26",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -7982,7 +8101,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L15",
+      "source_location": "L26",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -7993,7 +8112,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L15",
+      "source_location": "L26",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8003,7 +8122,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L55",
+      "source_location": "L66",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -8014,7 +8133,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L56",
+      "source_location": "L67",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8025,7 +8144,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L56",
+      "source_location": "L67",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8036,7 +8155,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L56",
+      "source_location": "L67",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8046,7 +8165,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L91",
+      "source_location": "L102",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -8057,7 +8176,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L92",
+      "source_location": "L103",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8068,7 +8187,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L92",
+      "source_location": "L103",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8078,7 +8197,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L96",
+      "source_location": "L107",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -8089,7 +8208,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L97",
+      "source_location": "L108",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -8100,7 +8219,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L98",
+      "source_location": "L109",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8111,7 +8230,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L98",
+      "source_location": "L109",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8122,7 +8241,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L98",
+      "source_location": "L109",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8133,7 +8252,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L98",
+      "source_location": "L109",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8143,7 +8262,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L128",
+      "source_location": "L139",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -8154,7 +8273,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L129",
+      "source_location": "L140",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8165,7 +8284,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L129",
+      "source_location": "L140",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8176,7 +8295,113 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L129",
+      "source_location": "L140",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_auth_init",
+      "target": "backend_app_api_routes_auth_py_post",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L152",
+      "weight": 1.0,
+      "context": "decorator",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth",
+      "target": "backend_app_api_routes_auth_google_auth_init",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L153",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_auth_init",
+      "target": "backend_app_schemas_auth_googleauthinitrequest",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L153",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_auth_init",
+      "target": "backend_app_api_routes_auth_py_session",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L153",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_complete_registration",
+      "target": "backend_app_api_routes_auth_py_post",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L197",
+      "weight": 1.0,
+      "context": "decorator",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth",
+      "target": "backend_app_api_routes_auth_google_complete_registration",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L198",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_complete_registration",
+      "target": "backend_app_schemas_auth_googlecompleteregistrationrequest",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L198",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_complete_registration",
+      "target": "backend_app_api_routes_auth_py_session",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L198",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_rationale_154",
+      "target": "backend_app_api_routes_auth_google_auth_init",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L154",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_rationale_202",
+      "target": "backend_app_api_routes_auth_google_complete_registration",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L202",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -10492,7 +10717,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/core/config.py",
-      "source_location": "L35",
+      "source_location": "L43",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -10503,7 +10728,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/core/config.py",
-      "source_location": "L37",
+      "source_location": "L45",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -10513,7 +10738,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/core/config.py",
-      "source_location": "L42",
+      "source_location": "L50",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -10524,7 +10749,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/core/config.py",
-      "source_location": "L44",
+      "source_location": "L52",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -13198,6 +13423,66 @@
       "confidence": "EXTRACTED",
       "source_file": "backend/app/schemas/auth.py",
       "source_location": "L38",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_schemas_auth",
+      "target": "backend_app_schemas_auth_googleauthinitrequest",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/schemas/auth.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_schemas_auth_googleauthinitrequest",
+      "target": "backend_app_schemas_auth_py_basemodel",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/schemas/auth.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_schemas_auth",
+      "target": "backend_app_schemas_auth_googleverifyotprequest",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/schemas/auth.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_schemas_auth_googleverifyotprequest",
+      "target": "backend_app_schemas_auth_py_basemodel",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/schemas/auth.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_schemas_auth",
+      "target": "backend_app_schemas_auth_googlecompleteregistrationrequest",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/schemas/auth.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_schemas_auth_googlecompleteregistrationrequest",
+      "target": "backend_app_schemas_auth_py_basemodel",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/schemas/auth.py",
+      "source_location": "L55",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -16254,6 +16539,16 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_tests_test_auth",
+      "target": "backend_tests_test_auth_test_google_auth_init_and_registration_flow",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/test_auth.py",
+      "source_location": "L157",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_tests_test_auth_rationale_6",
       "target": "backend_tests_test_auth_test_login_admin_success",
       "relation": "rationale_for",
@@ -16380,6 +16675,16 @@
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/test_auth.py",
       "source_location": "L151",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_test_auth_rationale_158",
+      "target": "backend_tests_test_auth_test_google_auth_init_and_registration_flow",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/test_auth.py",
+      "source_location": "L158",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -17739,7 +18044,7 @@
     },
     {
       "source": "frontend_package_dependencies",
-      "target": "frontend_package_dependencies_axios",
+      "target": "frontend_package_dependencies_react_oauth_google",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
@@ -17749,11 +18054,32 @@
     },
     {
       "source": "frontend_package",
-      "target": "ref_axios",
+      "target": "ref_react_oauth_google",
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
       "source_location": "L13",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_package_dependencies",
+      "target": "frontend_package_dependencies_axios",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/package.json",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_package",
+      "target": "ref_axios",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/package.json",
+      "source_location": "L14",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -17764,7 +18090,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -17774,7 +18100,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -17785,7 +18111,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -17795,7 +18121,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -17806,7 +18132,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -17816,7 +18142,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -17827,7 +18153,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -17837,7 +18163,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -17848,7 +18174,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -17858,7 +18184,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -17869,7 +18195,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -17879,7 +18205,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -17890,7 +18216,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -17900,7 +18226,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -17911,7 +18237,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -17921,7 +18247,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -17932,7 +18258,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -17942,7 +18268,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -17953,7 +18279,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -17963,7 +18289,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -17973,7 +18299,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -17984,7 +18310,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -17994,7 +18320,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -18005,7 +18331,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -18015,7 +18341,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -18026,7 +18352,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -18036,7 +18362,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -18047,7 +18373,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -18057,7 +18383,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -18068,7 +18394,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -18078,7 +18404,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -18089,7 +18415,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -18099,7 +18425,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "frontend/package.json",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -18877,7 +19203,7 @@
     },
     {
       "source": "frontend_src_components_layout_header",
-      "target": "frontend_src_components_common_commandpalette",
+      "target": "frontend_src_components_layout_layout",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -18888,7 +19214,18 @@
     },
     {
       "source": "frontend_src_components_layout_header",
-      "target": "frontend_src_components_profile_profileeditmodal",
+      "target": "frontend_src_components_layout_layout_usecasemodal",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/layout/Header.jsx",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_src_components_layout_header",
+      "target": "frontend_src_components_common_commandpalette",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -18899,7 +19236,7 @@
     },
     {
       "source": "frontend_src_components_layout_header",
-      "target": "frontend_src_services_api",
+      "target": "frontend_src_components_profile_profileeditmodal",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -18910,11 +19247,22 @@
     },
     {
       "source": "frontend_src_components_layout_header",
+      "target": "frontend_src_services_api",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/layout/Header.jsx",
+      "source_location": "L35",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_src_components_layout_header",
       "target": "frontend_src_components_layout_header_nav_items",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/components/layout/Header.jsx",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -18924,7 +19272,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/components/layout/Header.jsx",
-      "source_location": "L84",
+      "source_location": "L85",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -19597,7 +19945,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/components/ui/login-form.tsx",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -19722,7 +20070,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/context/AuthContext.jsx",
-      "source_location": "L111",
+      "source_location": "L170",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -20482,6 +20830,17 @@
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/main.jsx",
       "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_src_main",
+      "target": "ref_react_oauth_google",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/main.jsx",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -21351,7 +21710,7 @@
     },
     {
       "source": "frontend_src_pages_login",
-      "target": "frontend_src_context_authcontext",
+      "target": "ref_react_oauth_google",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -21362,18 +21721,7 @@
     },
     {
       "source": "frontend_src_pages_login",
-      "target": "frontend_src_context_authcontext_useauth",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "frontend/src/pages/Login.jsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "frontend_src_pages_login",
-      "target": "frontend_src_components_ui_login_form",
+      "target": "frontend_src_context_authcontext",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -21384,11 +21732,44 @@
     },
     {
       "source": "frontend_src_pages_login",
+      "target": "frontend_src_context_authcontext_useauth",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/pages/Login.jsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_src_pages_login",
+      "target": "frontend_src_components_ui_login_form",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/pages/Login.jsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_src_pages_login",
+      "target": "frontend_src_components_modals_googleonboardingmodal",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/pages/Login.jsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_src_pages_login",
       "target": "frontend_src_pages_login_login",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/pages/Login.jsx",
-      "source_location": "L7",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -23167,7 +23548,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/components/layout/Header.jsx",
-      "source_location": "L32",
+      "source_location": "L33",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -23178,7 +23559,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/components/layout/Header.jsx",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -23189,7 +23570,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/components/layout/Header.jsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -23464,7 +23845,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/pages/Login.jsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -24130,12 +24511,45 @@
     },
     {
       "source": "backend_app_api_routes_auth",
+      "target": "backend_app_schemas_auth_googleauthinitrequest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth",
+      "target": "backend_app_schemas_auth_googleverifyotprequest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth",
+      "target": "backend_app_schemas_auth_googlecompleteregistrationrequest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth",
       "target": "backend_app_services_audit_service_log_audit_event",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L8",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -24146,7 +24560,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L9",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -26456,7 +26870,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/components/layout/Header.jsx",
-      "source_location": "L87",
+      "source_location": "L88",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -26467,7 +26881,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/components/layout/Header.jsx",
-      "source_location": "L88",
+      "source_location": "L89",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_src_components_layout_header_header",
+      "target": "frontend_src_components_layout_layout_usecasemodal",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/layout/Header.jsx",
+      "source_location": "L147",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -26687,7 +27112,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/pages/Login.jsx",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -27248,7 +27673,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L16",
+      "source_location": "L27",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27259,7 +27684,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L57",
+      "source_location": "L68",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27270,7 +27695,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L92",
+      "source_location": "L103",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27281,7 +27706,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L100",
+      "source_location": "L111",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27292,7 +27717,29 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L129",
+      "source_location": "L140",
+      "weight": 0.8,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_auth_init",
+      "target": "backend_app_models_user_user",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L160",
+      "weight": 0.8,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_complete_registration",
+      "target": "backend_app_models_user_user",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L219",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27303,7 +27750,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L24",
+      "source_location": "L35",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27314,7 +27761,18 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L107",
+      "source_location": "L118",
+      "weight": 0.8,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_complete_registration",
+      "target": "backend_app_models_user_userrole",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L225",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27325,7 +27783,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L56",
+      "source_location": "L67",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27336,7 +27794,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L15",
+      "source_location": "L26",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27347,7 +27805,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L48",
+      "source_location": "L59",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27358,7 +27816,18 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L84",
+      "source_location": "L95",
+      "weight": 0.8,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_complete_registration",
+      "target": "backend_app_schemas_auth_tokenresponse",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L261",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27369,7 +27838,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L51",
+      "source_location": "L62",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27380,7 +27849,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L87",
+      "source_location": "L98",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27391,7 +27860,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L93",
+      "source_location": "L104",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27402,7 +27871,29 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L125",
+      "source_location": "L136",
+      "weight": 0.8,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_auth_init",
+      "target": "backend_app_schemas_auth_userresponse",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L180",
+      "weight": 0.8,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_complete_registration",
+      "target": "backend_app_schemas_auth_userresponse",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L264",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -27413,7 +27904,29 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L99",
+      "source_location": "L110",
+      "weight": 0.8,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_auth_init",
+      "target": "backend_app_schemas_auth_googleauthinitrequest",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L153",
+      "weight": 0.8,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_complete_registration",
+      "target": "backend_app_schemas_auth_googlecompleteregistrationrequest",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L199",
       "weight": 0.8,
       "_origin": "ast"
     },
@@ -28743,7 +29256,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L32",
+      "source_location": "L43",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -28755,7 +29268,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L39",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -28767,7 +29280,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L40",
+      "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -28779,7 +29292,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L58",
+      "source_location": "L69",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -28791,7 +29304,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L59",
+      "source_location": "L70",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -28803,7 +29316,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L75",
+      "source_location": "L86",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -28815,7 +29328,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L112",
+      "source_location": "L123",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -28827,7 +29340,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L117",
+      "source_location": "L128",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -28839,7 +29352,55 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/api/routes/auth.py",
-      "source_location": "L130",
+      "source_location": "L141",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_auth_init",
+      "target": "backend_app_core_security_create_access_token",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L174",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_complete_registration",
+      "target": "backend_app_core_security_get_password_hash",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L241",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_complete_registration",
+      "target": "backend_app_core_security_create_access_token",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L251",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_app_api_routes_auth_google_complete_registration",
+      "target": "backend_app_services_audit_service_log_audit_event",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/app/api/routes/auth.py",
+      "source_location": "L252",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -29475,7 +30036,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/components/layout/Header.jsx",
-      "source_location": "L515",
+      "source_location": "L563",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -29487,7 +30048,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/components/layout/Header.jsx",
-      "source_location": "L524",
+      "source_location": "L576",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -29595,7 +30156,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/pages/ComplaintDetails.jsx",
-      "source_location": "L286",
+      "source_location": "L250",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -29607,7 +30168,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/pages/ComplaintDetails.jsx",
-      "source_location": "L287",
+      "source_location": "L251",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -29619,7 +30180,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/pages/ComplaintDetails.jsx",
-      "source_location": "L288",
+      "source_location": "L252",
       "weight": 1.0,
       "_origin": "ast"
     },

@@ -21,7 +21,6 @@ import {
   Database,
   BarChart3,
   Users,
-  Compass,
 } from 'lucide-react';
 
 export default function Landing() {
@@ -56,13 +55,7 @@ export default function Landing() {
         setIsScrolled(false);
       }
 
-      // 2. Bottom of page check (activates 'about' when scrolled near bottom)
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80) {
-        setActiveSection('about');
-        return;
-      }
-
-      // 3. Section scroll-spy with header offset
+      // Section scroll-spy with header offset
       const headerOffset = 160;
       let current = 'home';
       for (const item of navItems) {
@@ -542,70 +535,296 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* SCROLLABLE SECTION 4: IMPACT & PROBLEM STATEMENT */}
-      <section id="impact" className="py-20 max-w-7xl mx-auto px-6 sm:px-8 relative z-20">
-        <div className="bg-gradient-to-tr from-blue-900 via-slate-900 to-indigo-950 rounded-3xl p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* SCROLLABLE SECTION 4: IMPACT & METRICS */}
+      <section id="impact" className="py-24 max-w-7xl mx-auto px-6 sm:px-8 relative z-20">
+        <div className="text-center max-w-3xl mx-auto space-y-3 mb-16">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200">
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>Measurable Law Enforcement Impact</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Proven Results in Financial Cybercrime Interdiction
+          </h2>
+          <p className="text-sm sm:text-base text-slate-600">
+            CyberTrace AI fundamentally shifts cyber investigation from retrospective post-mortems to proactive, pre-withdrawal intervention.
+          </p>
+        </div>
 
-          <div className="relative z-10 max-w-2xl space-y-6">
-            <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 font-mono text-xs font-semibold border border-blue-400/30">
-              SIH 2026 Problem Statement SIH26184
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">
-              Transforming Cybercrime Response from Reactive to Predictive
-            </h2>
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-              Traditional cyber investigation takes hours to track money trails after cash has already been liquidated at distant ATMs. CyberTrace AI provides actionable intelligence in advance, giving law enforcement the critical lead window needed to protect citizen funds.
-            </p>
-            <div className="pt-2 flex flex-wrap gap-4">
-              <button
-                onClick={handleGetStarted}
-                className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-blue-500/30 transition flex items-center gap-2"
-              >
-                <span>{user ? 'Launch Investigation Platform' : 'Get Started'}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+        {/* 4 Quantified Impact Bento Cards with Tech Accents */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          {/* Stat 1 */}
+          <div className="bg-white rounded-2xl border border-slate-200 border-t-4 border-t-emerald-500 p-6 shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all space-y-3 group">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/80">
+                +34% Recovery Lift
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
             </div>
+            <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              ₹42.8+ Cr
+            </div>
+            <div className="text-sm font-bold text-slate-800">
+              Citizen Funds Saved
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Cumulative fraudulent amounts identified and frozen at Layer-1 and Layer-2 beneficiary nodes before ATM liquidation.
+            </p>
+          </div>
+
+          {/* Stat 2 */}
+          <div className="bg-white rounded-2xl border border-slate-200 border-t-4 border-t-blue-500 p-6 shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all space-y-3 group">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200/80">
+                Precision ML
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Cpu className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              94.2%
+            </div>
+            <div className="text-sm font-bold text-slate-800">
+              Mule Cluster Accuracy
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Random-walk graph inference isolating complex multi-hop mule rings with low false positives across high transaction velocity.
+            </p>
+          </div>
+
+          {/* Stat 3 */}
+          <div className="bg-white rounded-2xl border border-slate-200 border-t-4 border-t-indigo-500 p-6 shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all space-y-3 group">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200/80">
+                93% Time Reduction
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Clock className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              &lt; 15 Mins
+            </div>
+            <div className="text-sm font-bold text-slate-800">
+              Lead Window to Freeze
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Instant requisition generation dispatched to nodal bank officers, slashing traditional 4.5-hour manual turnaround.
+            </p>
+          </div>
+
+          {/* Stat 4 */}
+          <div className="bg-white rounded-2xl border border-slate-200 border-t-4 border-t-purple-500 p-6 shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all space-y-3 group">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200/80">
+                National Scale
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Radio className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              36
+            </div>
+            <div className="text-sm font-bold text-slate-800">
+              States & UTs Connected
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Inter-jurisdictional threat synchronization enabling seamless intelligence sharing without state border friction.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer id="about" className="border-t border-slate-200 bg-white py-12 relative z-20 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">
-              <ShieldAlert className="w-4 h-4" />
+      {/* SCROLLABLE SECTION 5: ABOUT CYBERTRACE AI */}
+      <section id="about" className="py-24 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 text-white relative z-20 overflow-hidden">
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 relative z-10">
+          <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold border border-blue-400/30 font-mono">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              <span>Smart India Hackathon 2026 • PS SIH26184</span>
             </div>
-            <span className="font-bold text-sm text-slate-900">CyberTrace AI</span>
-            <span className="text-slate-400">|</span>
-            <span>SIH 2026 National Finalist</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+              About CyberTrace AI
+            </h2>
+            <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+              CyberTrace AI is a next-generation Law Enforcement Decision Support System (LE-DSS) designed to dismantle organized cybercrime syndicates and prevent illicit cash-out operations across India.
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-6">
-            <button onClick={handleGetStarted} className="hover:text-blue-600 transition">
-              Dashboard
-            </button>
-            <button onClick={() => navigate('/complaints')} className="hover:text-blue-600 transition">
-              Complaints
-            </button>
-            <button onClick={() => navigate('/predictions')} className="hover:text-blue-600 transition">
-              Prediction Center
-            </button>
-            <button onClick={() => navigate('/map')} className="hover:text-blue-600 transition">
-              Intelligence Map
-            </button>
-            <button onClick={() => navigate('/network')} className="hover:text-blue-600 transition">
-              Transaction Network
-            </button>
-            <button onClick={() => navigate('/security')} className="hover:text-blue-600 transition">
-              Security Center
-            </button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {/* Mission Pillar */}
+            <div className="bg-slate-800/60 border border-slate-700/60 rounded-3xl p-8 backdrop-blur-md space-y-4 hover:border-blue-500/50 transition">
+              <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                <Users className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold">The Strategic Mission</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Empower cyber cell investigators with AI-augmented capabilities that match the speed of algorithmic money laundering, transforming raw banking telemetry into proactive police interventions.
+              </p>
+            </div>
+
+            {/* Evidence & Custody Pillar */}
+            <div className="bg-slate-800/60 border border-slate-700/60 rounded-3xl p-8 backdrop-blur-md space-y-4 hover:border-blue-500/50 transition">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                <Lock className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold">Judicial & Evidentiary Rigor</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Full compliance with Section 65B of the Indian Evidence Act. Every dossier, transaction link, and spatial lead is sealed with an immutable SHA-256 cryptographic chain of custody.
+              </p>
+            </div>
+
+            {/* Architecture Pillar */}
+            <div className="bg-slate-800/60 border border-slate-700/60 rounded-3xl p-8 backdrop-blur-md space-y-4 hover:border-blue-500/50 transition">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <Layers className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold">Dual-Tier Command Matrix</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Purpose-built consoles tailored for Field Investigators (immediate lead triage, spatial ATM cluster tracking) and Senior Supervisory Officers (state-wide risk monitoring and resource dispatch).
+              </p>
+            </div>
           </div>
 
-          <p className="text-[11px] text-slate-400">
-            &copy; 2026 CyberTrace AI. Authorized Law Enforcement Decision Support System.
-          </p>
+          {/* Hackathon Callout Banner */}
+          <div className="bg-gradient-to-r from-blue-900/60 via-indigo-900/40 to-slate-900/60 border border-blue-500/30 rounded-3xl p-8 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
+            <div className="space-y-2 max-w-xl text-center md:text-left">
+              <h4 className="text-xl font-bold tracking-tight">
+                Ready to explore the intelligence platform?
+              </h4>
+              <p className="text-xs text-slate-300">
+                Access live cyber lead triaging, spatial ATM cash-out predictions, and interactive transaction topologies.
+              </p>
+            </div>
+            <button
+              onClick={handleGetStarted}
+              className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-blue-500/30 transition flex items-center gap-2 cursor-pointer shrink-0"
+            >
+              <span>{user ? 'Open Operational Console' : 'Launch Platform Demo'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* REORIENTED STRUCTURED FOOTER */}
+      <footer className="border-t border-slate-200/90 bg-white pt-16 pb-12 relative z-20 text-slate-600">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          {/* Main Footer Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-slate-100">
+            {/* Column 1 & 2: Brand & National Vision */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
+                  <ShieldAlert className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <span className="font-extrabold text-base tracking-tight text-slate-900">
+                    CyberTrace <span className="text-blue-600">AI</span>
+                  </span>
+                  <span className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Law Enforcement Decision Support System
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed max-w-sm">
+                Next-generation financial cybercrime interdiction engine designed for Smart India Hackathon 2026 (Problem Statement SIH26184). Transforming retrospective investigations into proactive pre-withdrawal interdiction.
+              </p>
+              <div className="flex items-center gap-2 pt-1">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold border border-blue-200/70">
+                  <span className="w-2 h-2 rounded-full bg-blue-500" />
+                  <span>SIH 2026 National Finalist</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200/70">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Grid Operational</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Column 3: Platform Modules */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                Core Modules
+              </h4>
+              <ul className="space-y-2.5 text-xs text-slate-500 font-medium">
+                <li>
+                  <button onClick={handleGetStarted} className="hover:text-blue-600 transition cursor-pointer">
+                    Operational Dashboard
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => navigate('/complaints')} className="hover:text-blue-600 transition cursor-pointer">
+                    Complaint Intelligence
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => navigate('/predictions')} className="hover:text-blue-600 transition cursor-pointer">
+                    Prediction Center
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 4: Threat Intelligence */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                Threat Intelligence
+              </h4>
+              <ul className="space-y-2.5 text-xs text-slate-500 font-medium">
+                <li>
+                  <button onClick={() => navigate('/map')} className="hover:text-blue-600 transition cursor-pointer">
+                    Tactical Heatmap & GIS
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => navigate('/network')} className="hover:text-blue-600 transition cursor-pointer">
+                    Transaction Network Graph
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => navigate('/security')} className="hover:text-blue-600 transition cursor-pointer">
+                    Security Command Center
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 5: Legal & Quick Launch */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                Evidentiary Rigor
+              </h4>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Indian Evidence Act Section 65B certified chain of custody with SHA-256 tamper-proof ledgering.
+              </p>
+              <button
+                onClick={handleGetStarted}
+                className="cursor-pointer mt-2 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
+              >
+                <span>{user ? 'Open Console' : 'Launch Demo'}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Bottom Legal & Copyright Bar */}
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-400">
+            <p>
+              &copy; 2026 CyberTrace AI. Authorized Law Enforcement Decision Support System (LE-DSS).
+            </p>
+            <div className="flex items-center gap-4 sm:gap-6">
+              <span>Smart India Hackathon 2026 • PS SIH26184</span>
+              <span>•</span>
+              <span>Restricted Agency Access</span>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

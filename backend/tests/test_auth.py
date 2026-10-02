@@ -185,3 +185,58 @@ def test_google_auth_init_and_registration_flow(client):
     assert complete_data["user"]["role"] == "investigator"
     assert complete_data["user"]["badge_number"] == "POL-DEL-789"
 
+    # Step 3: Now log in again as an EXISTING Google user -> MUST NOT send OTP
+    login_again_res = client.post("/auth/google/init", json={
+        "email": new_google_email,
+        "full_name": "SI Rakesh Verma",
+    })
+    assert login_again_res.status_code == status.HTTP_200_OK
+    again_data = login_again_res.json()
+    assert again_data["status"] == "existing_user"
+    assert again_data["requires_profile_setup"] is False
+    assert "access_token" in again_data
+    # Verify no new OTP was created for this existing user
+    from backend.app.services.email_service import otp_storage
+    assert new_google_email not in otp_storage
+
+
+def test_forgot_and_reset_password_flow(client):
+    """Test forgot password OTP generation and subsequent password reset."""
+    target_email = "officer.reset@cybertrace.gov.in"
+    # Create user first
+    signup_res = client.post("/auth/signup", json={
+        "email": target_email,
+        "password": "OldPassword123!",
+        "full_name": "Inspector Anand Rao",
+        "role": "investigator",
+        "badge_number": "POL-KA-5501",
+    })
+    assert signup_res.status_code == status.HTTP_200_OK
+
+    # Step 1: Request password reset OTP
+    forgot_res = client.post("/auth/forgot-password", json={"email": target_email})
+    assert forgot_res.status_code == status.HTTP_200_OK
+    forgot_data = forgot_res.json()
+    assert forgot_data["status"] == "otp_sent"
+    assert "dev_otp" in forgot_data
+    reset_otp = forgot_data["dev_otp"]
+
+    # Step 2: Reset password using OTP
+    new_password = "BrandNewSecurePassword2026!"
+    reset_res = client.post("/auth/reset-password", json={
+        "email": target_email,
+        "otp": reset_otp,
+        "new_password": new_password,
+    })
+    assert reset_res.status_code == status.HTTP_200_OK
+    assert reset_res.json()["status"] == "success"
+
+    # Step 3: Login with the new password
+    login_res = client.post("/auth/login", json={
+        "email": target_email,
+        "password": new_password,
+    })
+    assert login_res.status_code == status.HTTP_200_OK
+    assert "access_token" in login_res.json()
+
+

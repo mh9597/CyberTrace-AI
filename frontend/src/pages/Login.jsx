@@ -5,6 +5,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import LoginForm from '@/components/ui/login-form';
 import GoogleOnboardingModal from '@/components/modals/GoogleOnboardingModal';
+import ForgotPasswordModal from '@/components/modals/ForgotPasswordModal';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -20,6 +21,9 @@ export default function Login() {
   const [googleEmail, setGoogleEmail] = useState('');
   const [googleName, setGoogleName] = useState('');
   const [googleModalError, setGoogleModalError] = useState('');
+
+  // Forgot password modal state
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
 
   const handleSignInSubmit = async ({ email, password }) => {
     setError('');
@@ -85,12 +89,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center p-4 sm:p-6 lg:p-10 selection:bg-indigo-500/20">
-      {location.state?.from && (
-        <div className="mb-4 max-w-lg w-full p-3 rounded-2xl bg-indigo-50/80 border border-indigo-200 text-indigo-900 text-xs font-mono text-center shadow-xs">
-          Authentication required to access {location.state.from.pathname}. Please sign in below.
-        </div>
-      )}
-
       {/* Login Form */}
       <LoginForm
         title="Sign in"
@@ -101,6 +99,7 @@ export default function Login() {
         externalError={error}
         onSubmit={handleSignInSubmit}
         onGoogleSignIn={() => triggerGoogleLogin()}
+        onForgotPassword={() => setShowForgotPasswordModal(true)}
         extraFooter={
           <div className="w-full mt-6 pt-4 border-t border-gray-100 flex flex-col items-center gap-2">
             <Link
@@ -126,6 +125,13 @@ export default function Login() {
         externalError={googleModalError}
         loading={loading}
         onSubmit={handleGoogleCompleteSubmit}
+      />
+
+      {/* Forgot Password — Email OTP & Reset Key Modal */}
+      <ForgotPasswordModal
+        isOpen={showForgotPasswordModal}
+        onClose={() => setShowForgotPasswordModal(false)}
+        initialEmail={registeredEmail || ''}
       />
     </div>
   );

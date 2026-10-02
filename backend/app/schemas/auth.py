@@ -59,3 +59,14 @@ class GoogleCompleteRegistrationRequest(BaseModel):
     role: str
     otp: str
     department: Optional[str] = None
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp: str
+    new_password: str
+

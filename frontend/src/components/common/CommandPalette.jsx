@@ -37,13 +37,11 @@ export default function CommandPalette({ isOpen, onClose, onSelectCase }) {
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      if (e.key === 'Escape') {
         e.preventDefault();
-        if (isOpen) onClose();
-        else setQuery('');
-      }
-      if (e.key === 'Escape' && isOpen) {
         onClose();
       }
     };
@@ -101,6 +99,11 @@ export default function CommandPalette({ isOpen, onClose, onSelectCase }) {
 
   // Keyboard navigation
   const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      onClose();
+      return;
+    }
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setHighlightedIndex((prev) => (prev < allItems.length - 1 ? prev + 1 : 0));

@@ -1,11 +1,12 @@
 import { cn } from "@/lib/utils";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Eye, EyeOff } from "lucide-react";
 
 export interface LoginFormProps {
   onSubmit?: (data: { email: string; password: string }) => Promise<void> | void;
   onGoogleSignIn?: () => void;
+  onForgotPassword?: () => void;
   loading?: boolean;
   externalError?: string;
   defaultEmail?: string;
@@ -20,6 +21,7 @@ export interface LoginFormProps {
 export default function Example({
   onSubmit,
   onGoogleSignIn,
+  onForgotPassword,
   loading = false,
   externalError = "",
   defaultEmail = "",
@@ -32,6 +34,7 @@ export default function Example({
 }: LoginFormProps) {
   const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState(defaultPassword);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   React.useEffect(() => {
@@ -176,7 +179,7 @@ export default function Example({
             />
           </div>
 
-          {/* Password input with SVG */}
+          {/* Password input with SVG and hide/unhide eye toggle */}
           <div className="flex items-center mt-4 w-full bg-transparent border border-gray-300/60 focus-within:border-indigo-500 h-12 rounded-full overflow-hidden pl-6 pr-4 gap-2 transition">
             <svg
               width="13"
@@ -192,13 +195,22 @@ export default function Example({
               />
             </svg>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
               className="bg-transparent text-gray-800 placeholder-gray-400 outline-none text-sm w-full h-full"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer p-1 transition"
+              title={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4 text-gray-400" />}
+            </button>
           </div>
 
           <div className="w-full flex items-center justify-between mt-5 text-gray-500/80">
@@ -215,8 +227,14 @@ export default function Example({
             </div>
             <button
               type="button"
-              onClick={() => alert("Please contact department administrator to reset credentials.")}
-              className="text-xs text-gray-600 hover:text-indigo-600 underline font-medium"
+              onClick={() => {
+                if (onForgotPassword) {
+                  onForgotPassword();
+                } else {
+                  alert("Please contact department administrator to reset credentials.");
+                }
+              }}
+              className="text-xs text-gray-600 hover:text-indigo-600 underline font-medium cursor-pointer"
             >
               Forgot password?
             </button>

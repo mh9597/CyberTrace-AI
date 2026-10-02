@@ -160,7 +160,7 @@ export default function SecurityCenter() {
   });
 
   return (
-    <div className="space-y-5 max-w-[1600px] mx-auto select-none transition-colors duration-200">
+    <div className="space-y-5 max-w-7xl mx-auto select-none transition-colors duration-200">
       {/* Toast Notification */}
       {userMsg && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-semibold animate-in slide-in-from-bottom duration-200">

@@ -32,7 +32,7 @@ export default function Layout() {
         <Header />
 
         {/* Main Content Area spanning full width */}
-        <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 bg-[#F4F7FC] dark:bg-slate-950 w-full max-w-[1600px] mx-auto">
+        <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 bg-[#F4F7FC] dark:bg-slate-950 w-full max-w-7xl mx-auto">
           <Outlet />
         </main>
 

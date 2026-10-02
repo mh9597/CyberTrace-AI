@@ -9,8 +9,11 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    try {
+      if (logout) await logout();
+    } finally {
+      window.location.replace('/');
+    }
   };
 
   return (

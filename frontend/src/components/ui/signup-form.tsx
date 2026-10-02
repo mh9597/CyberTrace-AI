@@ -10,6 +10,8 @@ import {
   KeyRound,
   CheckCircle2,
   ArrowRight,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 export type OfficerRole = "investigator" | "senior_officer";
@@ -47,6 +49,8 @@ export default function SignupForm({
   const [authorizationCode, setAuthorizationCode] = useState("SEC-HQ-2026");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validationError, setValidationError] = useState("");
 
   const handleRoleChange = (role: OfficerRole) => {
@@ -306,13 +310,22 @@ export default function SignupForm({
                 <div className="flex items-center w-full border border-gray-300/80 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 h-11 rounded-xl px-3.5 gap-2 transition bg-gray-50/50">
                   <Lock className="w-4 h-4 text-gray-400 shrink-0" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="bg-transparent text-gray-800 placeholder-gray-400 outline-none text-xs w-full"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer p-0.5 transition"
+                    title={showPassword ? "Hide password" : "Show password"}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5 text-gray-400" />}
+                  </button>
                 </div>
               </div>
 
@@ -323,13 +336,22 @@ export default function SignupForm({
                 <div className="flex items-center w-full border border-gray-300/80 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 h-11 rounded-xl px-3.5 gap-2 transition bg-gray-50/50">
                   <Lock className="w-4 h-4 text-gray-400 shrink-0" />
                   <input
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     required
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="bg-transparent text-gray-800 placeholder-gray-400 outline-none text-xs w-full"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer p-0.5 transition"
+                    title={showConfirmPassword ? "Hide password" : "Show password"}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5 text-gray-400" />}
+                  </button>
                 </div>
               </div>
             </div>
