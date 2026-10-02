@@ -56,20 +56,30 @@ Authorized Law Enforcement Decision Support System
 
     if settings.SMTP_ENABLED and settings.SMTP_USER and settings.SMTP_PASSWORD:
         try:
+            from email.utils import formataddr, make_msgid, formatdate
             msg = MIMEMultipart("alternative")
             msg["Subject"] = subject
-            msg["From"] = settings.SMTP_FROM_EMAIL
+            msg["From"] = formataddr(("CyberTrace AI Security", settings.SMTP_FROM_EMAIL))
             msg["To"] = email
+            msg["Reply-To"] = settings.SMTP_FROM_EMAIL
+            msg["Date"] = formatdate(localtime=True)
+            msg["Message-ID"] = make_msgid(domain="cybertrace.ai")
             msg.attach(MIMEText(body_text, "plain"))
             msg.attach(MIMEText(html_content, "html"))
 
-            with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT, timeout=10) as server:
+            with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT, timeout=12) as server:
                 server.starttls()
                 server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-                server.send_message(msg)
+                refusals = server.send_message(msg)
+                if refusals:
+                    logger.warning(f"SMTP rejected recipients: {refusals}")
+                    print(f"[SMTP REJECTED] {email}: {refusals}")
+                    return {"sent": False, "mode": "rejected", "error": str(refusals)}
+            print(f"[SMTP SUCCESS] Dispatched OTP {otp_code} to {email}")
             logger.info(f"Verification email successfully dispatched to {email}")
             return {"sent": True, "mode": "smtp"}
         except Exception as e:
+            print(f"[SMTP ERROR] Failed sending to {email}: {e}")
             logger.warning(f"SMTP dispatch failed: {e}. Logging OTP to console.")
             return {"sent": False, "mode": "fallback", "error": str(e), "dev_otp": otp_code}
     else:
