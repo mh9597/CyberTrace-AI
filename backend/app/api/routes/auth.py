@@ -16,6 +16,7 @@ from backend.app.schemas.auth import (
 )
 from backend.app.services.audit_service import log_audit_event
 from backend.app.services.email_service import generate_otp, send_verification_email, otp_storage
+from backend.app.core.config import settings
 from backend.app.api.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Authentication & Access Control"])
@@ -180,7 +181,7 @@ def google_auth_init(request: GoogleAuthInitRequest, db: Session = Depends(get_d
             "email_status": email_res,
         }
     else:
-        return {
+        resp = {
             "status": "new_google_user",
             "requires_profile_setup": True,
             "email": email_clean,
@@ -188,6 +189,9 @@ def google_auth_init(request: GoogleAuthInitRequest, db: Session = Depends(get_d
             "message": f"Verification code dispatched to {email_clean}. Please check your inbox.",
             "email_status": email_res,
         }
+        if settings.ENVIRONMENT != "production":
+            resp["dev_otp"] = otp_code
+        return resp
 
 
 @router.post("/google/complete-registration", response_model=TokenResponse)
