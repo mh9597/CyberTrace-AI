@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Upload, BrainCircuit, GitFork, Clock, ShieldAlert,
@@ -181,42 +181,6 @@ export default function ComplaintDetails() {
         </GlassCard>
       </div>
 
-      <GlassCard title={`Correlated Transaction Trail (${transactions.length} hops)`} subtitle="Multi-hop transaction sequence linked by authorized identifiers" icon={Layers} action={<span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-semibold">{transactions.filter((t) => t.is_cash_out).length} cash-out withdrawal(s) observed</span>}>
-        {transactions.length === 0 ? (
-          <div className="py-10 text-center rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-dashed border-slate-200 dark:border-slate-800">
-            <Layers className="w-8 h-8 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
-            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">No transaction records imported yet.</p>
-            <p className="text-[11px] text-slate-400 mt-1">Upload a banking or wallet ledger to trace multi-hop fund flows.</p>
-            <button onClick={() => setImportModalOpen(true)} className="mt-3 px-4 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs">
-              <Upload className="w-3.5 h-3.5" />Import Transaction CSV
-            </button>
-          </div>
-        ) : (
-          <div className="overflow-x-auto -mx-5">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-950/70 text-[10px] uppercase font-mono font-bold text-slate-400 border-b border-slate-100 dark:border-slate-800">
-                <tr>
-                  <th className="py-3 px-5">Hop</th><th className="py-3 px-4">Tx Reference</th><th className="py-3 px-4">Source Account</th><th className="py-3 px-4">Destination</th><th className="py-3 px-4">Amount</th><th className="py-3 px-4">Timestamp</th><th className="py-3 px-4">Channel</th><th className="py-3 px-5 text-right">Flags</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono text-[11px]">
-                {transactions.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3.5 px-5 font-bold text-cyan-700 dark:text-cyan-400">Hop L{t.hop_level}</td>
-                    <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300">{t.txn_reference}</td>
-                    <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400">{t.source_account}</td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-slate-200">{t.dest_account}{t.is_cash_out && <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] bg-rose-100 text-rose-800 border border-rose-200 font-bold dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/60">ATM CASH-OUT</span>}</td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">Rs.{t.amount?.toLocaleString('en-IN')}</td>
-                    <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400">{new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">{t.txn_type}</td>
-                    <td className="py-3.5 px-5 text-right"><span className="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50 text-[9px] font-bold">{t.suspicious_flags || 'NONE'}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </GlassCard>
 
       {transactions.some((t) => t.latitude && t.longitude) && (
         <GlassCard title="Geospatial Transaction Coordinates" subtitle="Coordinates extracted from transaction records" icon={MapPin}>
@@ -235,16 +199,34 @@ export default function ComplaintDetails() {
         </GlassCard>
       )}
 
-      <GlassCard title="Verified Evidence Files" subtitle="Cryptographically verified attachments" icon={ShieldAlert}>
+      <GlassCard title="Verified Evidence Files" subtitle="Cryptographically verified attachments (Transaction Statement & Scam Proof)" icon={ShieldAlert}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 flex items-center gap-2.5">
-            <FileCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-            <div className="min-w-0"><span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block truncate">Bank_Statement.pdf</span><span className="text-[10px] font-mono text-slate-400">1.4 MB - SHA256 Verified</span></div>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 flex items-center gap-2.5">
-            <Paperclip className="w-4 h-4 text-blue-500 shrink-0" />
-            <div className="min-w-0"><span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block truncate">WhatsApp_Chat.png</span><span className="text-[10px] font-mono text-slate-400">820 KB - Verified</span></div>
-          </div>
+          {(complaint.evidenceFiles || complaint.evidence_files || [
+            { name: 'Bank_Statement.pdf', size: '1.4 MB', type: 'Bank Statement', hash: 'SHA256 Verified' },
+            { name: 'WhatsApp_Chat.png', size: '820 KB', type: 'Scam Screenshot (WhatsApp)', hash: 'Verified' },
+          ]).map((ev, i) => (
+            <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 flex items-center gap-2.5">
+              {ev.previewUrl ? (
+                <img
+                  src={ev.previewUrl}
+                  alt={ev.name}
+                  className="w-8 h-8 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0"
+                />
+              ) : ev.type?.toLowerCase().includes('statement') || ev.name?.endsWith('.pdf') || ev.name?.endsWith('.csv') ? (
+                <FileCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+              ) : (
+                <Paperclip className="w-4 h-4 text-purple-500 shrink-0" />
+              )}
+              <div className="min-w-0 flex-1">
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block truncate">
+                  {ev.name || ev.file_name}
+                </span>
+                <span className="text-[10px] font-mono text-slate-400 block truncate">
+                  {ev.size || `${Math.round((ev.file_size_bytes || 840000)/1024)} KB`} • {ev.type || 'Verified Evidence'}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </GlassCard>
 

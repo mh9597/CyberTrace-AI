@@ -12,20 +12,6 @@ export default function Login() {
 
   const { login, loading } = useAuth();
   const [error, setError] = useState('');
-  const [activeRole, setActiveRole] = useState({
-    email: registeredEmail || 'investigator@cybertrace.gov.in',
-    password: registeredEmail ? '' : 'Investigator@123',
-  });
-
-  useEffect(() => {
-    if (registeredEmail) {
-      setActiveRole({
-        email: registeredEmail,
-        password: '',
-      });
-    }
-  }, [registeredEmail]);
-
   const handleSignInSubmit = async ({ email, password }) => {
     setError('');
     const res = await login(email, password);
@@ -34,11 +20,6 @@ export default function Login() {
     } else {
       setError(res.error);
     }
-  };
-
-  const handleSelectRole = (email, pass) => {
-    setActiveRole({ email, password: pass });
-    setError('');
   };
 
   return (
@@ -53,12 +34,11 @@ export default function Login() {
       <LoginForm
         title="Sign in"
         description="Welcome back! Please sign in to continue"
-        defaultEmail={activeRole.email}
-        defaultPassword={activeRole.password}
+        defaultEmail={registeredEmail || ''}
+        defaultPassword=""
         loading={loading}
         externalError={error}
         onSubmit={handleSignInSubmit}
-        onSelectRole={handleSelectRole}
         extraFooter={
           <div className="w-full mt-6 pt-4 border-t border-gray-100 flex flex-col items-center gap-2">
             <Link

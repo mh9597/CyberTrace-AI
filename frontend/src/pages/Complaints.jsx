@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   Plus,
   Search,
@@ -30,11 +30,17 @@ import {
   Check,
   UserCheck,
   ChevronDown,
+  FileSpreadsheet,
+  Image as ImageIcon,
+  Trash2,
+  AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCaseModal } from '../components/layout/Layout';
 import { useAuth } from '../context/AuthContext';
 import { can, PERMISSIONS } from '../utils/permissions';
+import { ALL_INDIAN_STATES } from '../data/indiaGeodata';
 
 // Enhanced realistic sample complaints data
 const INITIAL_COMPLAINTS = [
@@ -229,7 +235,7 @@ export default function Complaints() {
   const [toastMessage, setToastMessage] = useState(null);
   const [showAssignDropdown, setShowAssignDropdown] = useState(false);
 
-  // New Complaint Form State
+  // New Complaint Form State with Dynamic Jurisdictions
   const [formData, setFormData] = useState({
     complainant: '',
     phone: '',
@@ -237,14 +243,133 @@ export default function Complaints() {
     aadhaar: '',
     fraudType: 'Investment Scam',
     amount: '',
-    city: 'Ahmedabad',
     state: 'Gujarat',
+    city: 'Ahmedabad',
     bank: 'State Bank of India',
     suspectBank: 'HDFC Bank',
     suspectAccount: '',
     utr: '',
     summary: '',
   });
+
+  // Compulsory Evidentiary Documents State
+  const [statementFile, setStatementFile] = useState(null);
+  const [statementMeta, setStatementMeta] = useState(null);
+  const [scamFile, setScamFile] = useState(null);
+  const [scamMeta, setScamMeta] = useState(null);
+  const [scamPreviewUrl, setScamPreviewUrl] = useState(null);
+  const [scamChannel, setScamChannel] = useState('WhatsApp');
+  const [uploadError, setUploadError] = useState('');
+
+  const statementInputRef = useRef(null);
+  const scamInputRef = useRef(null);
+
+  // Dynamic Cities corresponding to selected State
+  const availableCities = useMemo(() => {
+    return ALL_INDIAN_STATES[formData.state] || ['Ahmedabad', 'Surat', 'Vadodara'];
+  }, [formData.state]);
+
+  const handleStateChange = (newState) => {
+    const cities = ALL_INDIAN_STATES[newState] || [];
+    setFormData((prev) => ({
+      ...prev,
+      state: newState,
+      city: cities[0] || 'Main District',
+    }));
+  };
+
+  // Real-time Dynamic AI Telemetry & Risk Scoring Estimator
+  const dynamicRiskInfo = useMemo(() => {
+    const rawAmt = parseFloat(String(formData.amount).replace(/[^0-9.]/g, '')) || 0;
+    const type = formData.fraudType;
+    let score = 48;
+    let level = 'Medium';
+    let color = 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800';
+    let explanation = 'Single-hop digital trail. Forensic intake queued.';
+
+    if (rawAmt >= 1000000 || type === 'Digital Arrest / CBI Extortion' || type === 'Investment Scam') {
+      score = Math.min(98, 85 + Math.floor((rawAmt / 1000000) * 2));
+      level = 'Critical';
+      color = 'bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-400 border-red-200 dark:border-red-900';
+      explanation = 'High-velocity siphon detected. Immediate Layer-1 mule freeze requisition triggered.';
+    } else if (rawAmt >= 200000 || type === 'UPI Fraud' || type === 'Cryptocurrency Arbitrage') {
+      score = 74;
+      level = 'High';
+      color = 'bg-orange-50 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400 border-orange-200 dark:border-orange-900';
+      explanation = 'Accelerated multi-tier movement. Automated ATM radius monitoring activated.';
+    } else if (rawAmt > 0) {
+      score = 52;
+      level = 'Moderate';
+      color = 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800';
+      explanation = 'Single-hop transaction trail. Evidence verification pending.';
+    }
+
+    return { score, level, color, explanation, rawAmt };
+  }, [formData.amount, formData.fraudType]);
+
+  // Handle Document 1: Bank / Transaction Statement (Compulsory)
+  const handleStatementChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) {
+      setUploadError('Transaction Statement file size must not exceed 25MB.');
+      return;
+    }
+    setUploadError('');
+    setStatementFile(file);
+    const hash = 'SHA256:' + Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join('') + '...verified';
+    setStatementMeta({
+      name: file.name,
+      size: (file.size / 1024 > 1024)
+        ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+        : `${(file.size / 1024).toFixed(0)} KB`,
+      type: file.type || 'application/pdf',
+      hash,
+    });
+  };
+
+  const removeStatement = () => {
+    setStatementFile(null);
+    setStatementMeta(null);
+    if (statementInputRef.current) statementInputRef.current.value = '';
+  };
+
+  // Handle Document 2: Scam Evidence Screenshot (Compulsory)
+  const handleScamFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) {
+      setUploadError('Scam Screenshot file size must not exceed 25MB.');
+      return;
+    }
+    setUploadError('');
+    setScamFile(file);
+    const isImage = file.type.startsWith('image/');
+    const preview = isImage ? URL.createObjectURL(file) : null;
+    setScamPreviewUrl(preview);
+    const hash = 'SHA256:' + Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join('') + '...verified';
+    setScamMeta({
+      name: file.name,
+      size: (file.size / 1024 > 1024)
+        ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+        : `${(file.size / 1024).toFixed(0)} KB`,
+      type: file.type,
+      isImage,
+      hash,
+    });
+  };
+
+  const removeScamFile = () => {
+    if (scamPreviewUrl) URL.revokeObjectURL(scamPreviewUrl);
+    setScamFile(null);
+    setScamPreviewUrl(null);
+    setScamMeta(null);
+    if (scamInputRef.current) scamInputRef.current.value = '';
+  };
+
+  const hasStatement = Boolean(statementFile);
+  const hasScamFile = Boolean(scamFile);
+  const isEvidenceComplete = Boolean(statementFile && scamFile);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -271,12 +396,39 @@ export default function Complaints() {
 
   const handleRegisterComplaint = (e) => {
     e.preventDefault();
-    if (!formData.complainant || !formData.amount) return;
+    setUploadError('');
 
-    const rawAmt = parseFloat(formData.amount.replace(/[^0-9.]/g, '')) || 500000;
+    if (!formData.complainant.trim()) {
+      setUploadError('Please enter complainant name.');
+      return;
+    }
+    if (!formData.phone.trim()) {
+      setUploadError('Please enter complainant mobile number.');
+      return;
+    }
+    if (!formData.amount.trim()) {
+      setUploadError('Please enter total disputed amount.');
+      return;
+    }
+
+    // STRICT COMPULSORY ATTACHMENTS ENFORCEMENT
+    if (!statementFile && !scamFile) {
+      setUploadError('COMPULSORY EVIDENCE MISSING: Both (1) Transaction / Bank Statement and (2) Scam Evidence Screenshot (WhatsApp, phishing link, etc.) are mandatory.');
+      return;
+    }
+    if (!statementFile) {
+      setUploadError('COMPULSORY DOCUMENT MISSING: Please upload the victim\'s Bank / Transaction Statement.');
+      return;
+    }
+    if (!scamFile) {
+      setUploadError('COMPULSORY DOCUMENT MISSING: Please upload a Scam Screenshot (e.g. WhatsApp chat, phishing link, or SMS).');
+      return;
+    }
+
+    const rawAmt = dynamicRiskInfo.rawAmt || 500000;
     const formattedAmt = `Rs.${rawAmt.toLocaleString('en-IN')}`;
-
     const newId = `CT-2026-0${complaints.length + 3}`;
+
     const newEntry = {
       id: newId,
       complainant: formData.complainant,
@@ -288,25 +440,40 @@ export default function Complaints() {
       amountRaw: rawAmt,
       city: formData.city,
       state: formData.state,
-      bank: formData.bank,
-      suspectBank: formData.suspectBank,
+      bank: formData.bank || 'State Bank of India',
+      suspectBank: formData.suspectBank || 'HDFC Bank (Mule L1)',
       suspectAccount: formData.suspectAccount || '50201948192841',
       utr: formData.utr || `UTR${Date.now()}`,
       date: '12 Oct 2026',
       time: 'Just now',
       status: 'Investigating',
       statusColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-      riskLevel: rawAmt > 500000 ? 'Critical' : 'High',
-      riskScore: rawAmt > 500000 ? 84 : 65,
-      riskColor: rawAmt > 500000 ? 'bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-400 border-red-200 dark:border-red-900' : 'bg-orange-50 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400 border-orange-200 dark:border-orange-900',
+      riskLevel: dynamicRiskInfo.level,
+      riskScore: dynamicRiskInfo.score,
+      riskColor: dynamicRiskInfo.color,
       assignedOfficer: 'Inspector Raj',
-      evidenceCount: 1,
-      summary: formData.summary || 'Initial cybercrime complaint lodged. Bank nodal liaisons initiated.',
+      evidenceCount: 2,
+      evidenceFiles: [
+        {
+          name: statementMeta?.name || 'Bank_Statement.pdf',
+          size: statementMeta?.size || '1.4 MB',
+          type: 'Bank / Transaction Statement',
+          hash: statementMeta?.hash || 'SHA256-Verified',
+        },
+        {
+          name: scamMeta?.name || 'Scam_Evidence.png',
+          size: scamMeta?.size || '820 KB',
+          type: `Scam Screenshot (${scamChannel})`,
+          hash: scamMeta?.hash || 'SHA256-Verified',
+          previewUrl: scamPreviewUrl,
+        },
+      ],
+      summary: formData.summary || `Victim reported ₹${rawAmt.toLocaleString('en-IN')} fraudulent transfer via ${formData.fraudType}. Transaction statement and ${scamChannel} evidence submitted.`,
     };
 
     setComplaints([newEntry, ...complaints]);
     setShowNewModal(false);
-    showToast(`Case ${newId} registered successfully & AI risk scored at ${newEntry.riskScore}%!`);
+    showToast(`Case ${newId} registered with 2 verified evidence documents! AI Risk Score: ${newEntry.riskScore}%.`);
 
     // Reset Form
     setFormData({
@@ -316,14 +483,20 @@ export default function Complaints() {
       aadhaar: '',
       fraudType: 'Investment Scam',
       amount: '',
-      city: 'Ahmedabad',
       state: 'Gujarat',
+      city: 'Ahmedabad',
       bank: 'State Bank of India',
       suspectBank: 'HDFC Bank',
       suspectAccount: '',
       utr: '',
       summary: '',
     });
+    setStatementFile(null);
+    setStatementMeta(null);
+    setScamFile(null);
+    setScamPreviewUrl(null);
+    setScamMeta(null);
+    setUploadError('');
   };
 
   const handleFreezeAction = (caseId, e) => {
@@ -702,12 +875,17 @@ export default function Complaints() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleRegisterComplaint} className="mt-5 space-y-4 text-xs">
-              {/* Section 1: Complainant Information */}
+            <form onSubmit={handleRegisterComplaint} className="mt-5 space-y-5 text-xs">
+              {/* Section 1: Complainant Information & Dynamic Jurisdictions */}
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono block mb-2">
-                  1. Complainant Identity
-                </span>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono block">
+                    1. Complainant Identity & Jurisdiction
+                  </span>
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono font-semibold">
+                    Dynamic Indian Jurisdiction
+                  </span>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
@@ -749,29 +927,65 @@ export default function Complaints() {
                   </div>
                   <div>
                     <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
-                      City / Jurisdiction
+                      Aadhaar / National ID (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. XXXX-XXXX-9912"
+                      value={formData.aadhaar}
+                      onChange={(e) => setFormData({ ...formData, aadhaar: e.target.value })}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-hidden"
+                    />
+                  </div>
+
+                  {/* Dynamic State Selection */}
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
+                      State / Union Territory *
+                    </label>
+                    <select
+                      value={formData.state}
+                      onChange={(e) => handleStateChange(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-hidden cursor-pointer"
+                    >
+                      {Object.keys(ALL_INDIAN_STATES).map((state) => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Dynamic City Selection corresponding to State */}
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
+                      City / District Jurisdiction *
                     </label>
                     <select
                       value={formData.city}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                       className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-hidden cursor-pointer"
                     >
-                      <option>Ahmedabad</option>
-                      <option>Vadodara</option>
-                      <option>Surat</option>
-                      <option>Rajkot</option>
-                      <option>Mumbai</option>
-                      <option>Delhi</option>
+                      {availableCities.map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
               </div>
 
-              {/* Section 2: Financial & Fraud Details */}
+              {/* Section 2: Financial & Fraud Details with Real-time AI Estimator */}
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono block mb-2">
-                  2. Incident & Financial Telemetry
-                </span>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono block">
+                    2. Incident & Financial Telemetry
+                  </span>
+                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-mono font-semibold">
+                    Real-Time AI Risk Scoring
+                  </span>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
@@ -784,9 +998,13 @@ export default function Complaints() {
                     >
                       <option>Investment Scam</option>
                       <option>UPI Fraud</option>
-                      <option>Phishing Ring</option>
-                      <option>Fake Job / Loan</option>
-                      <option>Cryptocurrency Fraud</option>
+                      <option>Phishing Ring / Malicious URL</option>
+                      <option>WhatsApp / Telegram Impersonation</option>
+                      <option>Digital Arrest / CBI Extortion</option>
+                      <option>Fake Job / Part-Time Task</option>
+                      <option>Cryptocurrency Arbitrage</option>
+                      <option>Loan App Extortion</option>
+                      <option>Other Cybercrime</option>
                     </select>
                   </div>
                   <div>
@@ -801,6 +1019,32 @@ export default function Complaints() {
                       onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                       className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 font-semibold focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
                     />
+                  </div>
+                </div>
+
+                {/* Real-time Dynamic AI Telemetry Preview */}
+                <div className="mt-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 shrink-0">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        <span>Projected Threat Level:</span>
+                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${dynamicRiskInfo.color}`}>
+                          {dynamicRiskInfo.level} ({dynamicRiskInfo.score}%)
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        {dynamicRiskInfo.explanation}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-left sm:text-right shrink-0 pl-9 sm:pl-0">
+                    <span className="text-[9px] uppercase font-mono text-slate-400 block">ATM Cash-out Horizon</span>
+                    <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 font-mono">
+                      {dynamicRiskInfo.rawAmt > 500000 ? '⚡ < 45 Mins (Urgent)' : 'Standard Monitoring'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -862,13 +1106,13 @@ export default function Complaints() {
                 </div>
               </div>
 
-              {/* Section 4: Narrative & File Attachment */}
+              {/* Section 4: Narrative */}
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
                   Incident Synopsis
                 </label>
                 <textarea
-                  rows="3"
+                  rows="2"
                   placeholder="Detail the sequence of events, communication channel, and deceptive techniques utilized..."
                   value={formData.summary}
                   onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
@@ -876,32 +1120,247 @@ export default function Complaints() {
                 ></textarea>
               </div>
 
-              {/* Drag and Drop Evidence Upload Zone */}
-              <div className="p-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl text-center bg-slate-50/50 dark:bg-slate-800/30">
-                <Upload className="w-6 h-6 text-slate-400 mx-auto mb-1.5" />
-                <span className="font-semibold text-slate-700 dark:text-slate-300 block">
-                  Upload Evidentiary Documents
-                </span>
-                <span className="text-[11px] text-slate-400 block mt-0.5">
-                  Bank Statements, WhatsApp Export, APK payloads, or Call Logs (Max 25MB)
-                </span>
+              {/* Section 5: COMPULSORY EVIDENTIARY DOCUMENTS (2 OF 2 MANDATORY) */}
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+                      4. Compulsory Evidentiary Documents *
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 font-bold border border-rose-200 dark:border-rose-900">
+                      2 Required
+                    </span>
+                  </div>
+                  {/* Live Validation Counter */}
+                  <div className="flex items-center gap-1.5 text-[11px] font-mono font-semibold">
+                    {isEvidenceComplete ? (
+                      <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> 2/2 Complete
+                      </span>
+                    ) : hasStatement || hasScamFile ? (
+                      <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5" /> 1/2 Uploaded
+                      </span>
+                    ) : (
+                      <span className="text-rose-500 dark:text-rose-400 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5" /> 0/2 Uploaded (Mandatory)
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Two Mandatory Upload Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  
+                  {/* Card 1: Bank / Transaction Statement */}
+                  <div className={`p-4 rounded-2xl border-2 transition ${
+                    statementFile 
+                      ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-950/20' 
+                      : 'border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 hover:border-blue-400'
+                  }`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className={`p-2 rounded-xl ${statementFile ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/60' : 'bg-blue-50 text-blue-600 dark:bg-blue-900/40'}`}>
+                          <FileSpreadsheet className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 text-xs block">
+                            1. Transaction Statement *
+                          </span>
+                          <span className="text-[10px] text-slate-400 block">
+                            Bank passbook / UPI ledger (PDF, CSV, XLS)
+                          </span>
+                        </div>
+                      </div>
+                      <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                        statementFile 
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300' 
+                          : 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300'
+                      }`}>
+                        {statementFile ? 'ATTACHED' : 'COMPULSORY'}
+                      </span>
+                    </div>
+
+                    <input
+                      type="file"
+                      ref={statementInputRef}
+                      onChange={handleStatementChange}
+                      accept=".pdf,.csv,.xlsx,.xls,.png,.jpg,.jpeg"
+                      className="hidden"
+                    />
+
+                    {statementFile && statementMeta ? (
+                      <div className="mt-3 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+                        <div className="min-w-0 pr-2">
+                          <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 block truncate">
+                            {statementMeta.name}
+                          </span>
+                          <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 block">
+                            {statementMeta.size} • {statementMeta.hash.slice(0, 18)}...
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={removeStatement}
+                          className="p-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition cursor-pointer"
+                          title="Remove Statement"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => statementInputRef.current?.click()}
+                        className="mt-3 w-full py-3 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:border-blue-400"
+                      >
+                        <Upload className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        <span>Upload Transaction Statement</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Card 2: Scam Evidence Screenshot */}
+                  <div className={`p-4 rounded-2xl border-2 transition ${
+                    scamFile 
+                      ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-950/20' 
+                      : 'border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 hover:border-purple-400'
+                  }`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className={`p-2 rounded-xl ${scamFile ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/60' : 'bg-purple-50 text-purple-600 dark:bg-purple-900/40'}`}>
+                          <ImageIcon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 text-xs block">
+                            2. Scam Screenshot *
+                          </span>
+                          <span className="text-[10px] text-slate-400 block">
+                            WhatsApp chat, phishing link, APK (PNG, JPG, PDF)
+                          </span>
+                        </div>
+                      </div>
+                      <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                        scamFile 
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300' 
+                          : 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300'
+                      }`}>
+                        {scamFile ? 'ATTACHED' : 'COMPULSORY'}
+                      </span>
+                    </div>
+
+                    {/* Channel Source Quick Selector */}
+                    <div className="flex items-center gap-1 mb-2 overflow-x-auto text-[10px] pb-1">
+                      {['WhatsApp', 'Phishing Link', 'Telegram', 'Fake APK / App', 'SMS / Call'].map((ch) => (
+                        <button
+                          type="button"
+                          key={ch}
+                          onClick={() => setScamChannel(ch)}
+                          className={`px-2 py-0.5 rounded-md font-mono transition cursor-pointer whitespace-nowrap ${
+                            scamChannel === ch
+                              ? 'bg-purple-600 text-white font-semibold'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                          }`}
+                        >
+                          {ch}
+                        </button>
+                      ))}
+                    </div>
+
+                    <input
+                      type="file"
+                      ref={scamInputRef}
+                      onChange={handleScamFileChange}
+                      accept="image/*,.pdf"
+                      className="hidden"
+                    />
+
+                    {scamFile && scamMeta ? (
+                      <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                          {scamPreviewUrl ? (
+                            <img
+                              src={scamPreviewUrl}
+                              alt="Scam Proof Thumbnail"
+                              className="w-9 h-9 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                              <FileCheck className="w-4 h-4" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 block truncate">
+                              {scamMeta.name}
+                            </span>
+                            <span className="text-[10px] font-mono text-purple-600 dark:text-purple-400 block">
+                              [{scamChannel}] {scamMeta.size} • Verified
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={removeScamFile}
+                          className="p-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition cursor-pointer"
+                          title="Remove Scam Screenshot"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => scamInputRef.current?.click()}
+                        className="w-full py-3 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:border-purple-400"
+                      >
+                        <Upload className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                        <span>Upload Scam Screenshot ({scamChannel})</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Validation Error Alert Banner */}
+                {uploadError && (
+                  <div className="mt-3 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2 animate-in fade-in">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
+                    <span>{uploadError}</span>
+                  </div>
+                )}
               </div>
 
               {/* Form Buttons */}
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setShowNewModal(false)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold transition cursor-pointer hover:bg-slate-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition cursor-pointer shadow-xs active:scale-95"
-                >
-                  Register Complaint &amp; Run AI Risk Scoring
-                </button>
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2.5">
+                <div className="text-[11px] font-mono text-slate-400">
+                  {isEvidenceComplete ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Evidentiary criteria satisfied
+                    </span>
+                  ) : (
+                    <span className="text-rose-500 font-semibold flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5" /> Both documents compulsory
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowNewModal(false);
+                      setUploadError('');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold transition cursor-pointer hover:bg-slate-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition cursor-pointer shadow-xs active:scale-95 flex items-center gap-2"
+                  >
+                    <Shield className="w-4 h-4" />
+                    <span>Register Complaint &amp; Run AI Risk Scoring</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>

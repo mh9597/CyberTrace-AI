@@ -20,8 +20,8 @@ export default function Example({
   onSubmit,
   loading = false,
   externalError = "",
-  defaultEmail = "investigator@cybertrace.gov.in",
-  defaultPassword = "Investigator@123",
+  defaultEmail = "",
+  defaultPassword = "",
   title = "Sign in",
   description = "Welcome back! Please sign in to continue",
   onSelectRole,
@@ -214,52 +214,7 @@ export default function Example({
             </button>
           </div>
 
-          {/* Quick Demo Credentials Selector for Investigators */}
-          {onSelectRole && (
-            <div className="w-full pt-4 mt-4 border-t border-gray-100 space-y-2">
-              <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider block text-center">
-                Quick Switch Demo Roles:
-              </span>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail("investigator@cybertrace.gov.in");
-                    setPassword("Investigator@123");
-                    setError("");
-                    onSelectRole("investigator@cybertrace.gov.in", "Investigator@123");
-                  }}
-                  className="px-2 py-1.5 rounded-lg bg-gray-50 hover:bg-indigo-50 hover:border-indigo-300 border border-gray-200 text-[10px] font-mono text-gray-700 transition text-center"
-                >
-                  Investigator
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail("senior.officer@cybertrace.gov.in");
-                    setPassword("Officer@123");
-                    setError("");
-                    onSelectRole("senior.officer@cybertrace.gov.in", "Officer@123");
-                  }}
-                  className="px-2 py-1.5 rounded-lg bg-gray-50 hover:bg-indigo-50 hover:border-indigo-300 border border-gray-200 text-[10px] font-mono text-gray-700 transition text-center"
-                >
-                  Senior Off.
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail("admin@cybertrace.gov.in");
-                    setPassword("Admin@123");
-                    setError("");
-                    onSelectRole("admin@cybertrace.gov.in", "Admin@123");
-                  }}
-                  className="px-2 py-1.5 rounded-lg bg-gray-50 hover:bg-indigo-50 hover:border-indigo-300 border border-gray-200 text-[10px] font-mono text-gray-700 transition text-center"
-                >
-                  Admin
-                </button>
-              </div>
-            </div>
-          )}
+
 
           <button
             type="submit"
