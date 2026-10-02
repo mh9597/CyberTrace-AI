@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, Link, NavLink, useLocation } from 'react-router-dom';
 import {
   ShieldAlert,
@@ -13,6 +13,7 @@ import {
   BadgeCheck,
   Edit3,
   Shield,
+  Lock,
   LogOut,
   LayoutDashboard,
   FileText,
@@ -108,6 +109,17 @@ export default function Header({ onSearch }) {
       setShowProfileMenu(false);
     }, 200);
   };
+
+  // RBAC Dynamic Navigation Filtering
+  const visibleNavItems = useMemo(() => {
+    return NAV_ITEMS.filter((item) => {
+      // Investigators are restricted from Security Center & Audit Vault
+      if (item.href === '/security' && (!user?.role || user?.role === 'investigator')) {
+        return false;
+      }
+      return true;
+    });
+  }, [user?.role]);
 
   // Close mobile menu on page navigation
   useEffect(() => {
@@ -276,6 +288,26 @@ export default function Header({ onSearch }) {
                   </div>
                 </div>
 
+                {/* Role Badge Indicator */}
+                {user?.role === 'senior_officer' && (
+                  <span className="hidden xl:inline-flex items-center gap-1 font-extrabold text-[9px] tracking-wide px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                    <ShieldCheck className="w-2.5 h-2.5 text-purple-600" />
+                    SUPERVISORY COMMAND
+                  </span>
+                )}
+                {user?.role === 'admin' && (
+                  <span className="hidden xl:inline-flex items-center gap-1 font-extrabold text-[9px] tracking-wide px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    <Lock className="w-2.5 h-2.5 text-emerald-600" />
+                    PLATFORM ADMINISTRATOR
+                  </span>
+                )}
+                {(!user?.role || user?.role === 'investigator') && (
+                  <span className="hidden xl:inline-flex items-center gap-1 font-extrabold text-[9px] tracking-wide px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    <Shield className="w-2.5 h-2.5 text-blue-600" />
+                    IO • CYBER CRIME
+                  </span>
+                )}
+
                 <ChevronDown
                   className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform duration-200 hidden sm:block ${
                     showProfileMenu ? 'rotate-180 text-blue-500' : ''
@@ -373,7 +405,7 @@ export default function Header({ onSearch }) {
         <div className="hidden md:block border-t border-slate-200/60 dark:border-slate-800/60 bg-slate-50/70 dark:bg-slate-950/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="flex items-center space-x-1 py-1.5 overflow-x-auto no-scrollbar">
-              {NAV_ITEMS.map((item) => {
+              {visibleNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;
 
@@ -439,7 +471,7 @@ export default function Header({ onSearch }) {
               </div>
             </div>
 
-            {NAV_ITEMS.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               return (
                 <NavLink

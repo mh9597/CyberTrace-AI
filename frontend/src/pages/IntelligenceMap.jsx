@@ -15,16 +15,13 @@ import {
 } from 'lucide-react';
 import { useCaseModal } from '../components/layout/Layout';
 import IntelligenceMapCanvas, { HOTSPOTS } from '../components/map/IntelligenceMapCanvas';
+import { ALL_INDIAN_STATES, ALL_REGION_COORDINATES } from '../data/indiaGeodata';
 
-export const STATE_DISTRICTS = {
-  Gujarat: ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Gandhinagar'],
-  Maharashtra: ['Mumbai', 'Pune', 'Nagpur', 'Thane', 'Nashik'],
-  Rajasthan: ['Jaipur', 'Jodhpur', 'Udaipur', 'Kota'],
-  'Delhi NCR': ['New Delhi', 'Gurugram', 'Noida', 'South Delhi'],
-};
+export const STATE_DISTRICTS = ALL_INDIAN_STATES;
 
 export default function IntelligenceMap() {
   const { openCaseModal } = useCaseModal();
+  const [dateRange, setDateRange] = useState('Last 30 Days');
   const [selectedState, setSelectedState] = useState('Gujarat');
   const [selectedDistrict, setSelectedDistrict] = useState('Ahmedabad');
   const [selectedRisk, setSelectedRisk] = useState('All Levels');
@@ -46,34 +43,53 @@ export default function IntelligenceMap() {
     setLayers((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const getDistrictHotspot = (state, district) => {
+    const found = HOTSPOTS.find((h) => h.district === district || (h.state === state && !district));
+    if (found) return found;
+
+    const coords = ALL_REGION_COORDINATES[district] || ALL_REGION_COORDINATES[state] || { lat: 23.0300, lng: 72.5178 };
+    return {
+      id: `${state.toLowerCase().replace(/[^a-z0-9]/g, '')}-${district.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+      name: `${district} - Commercial ATM Cluster`,
+      state: state,
+      district: district,
+      lat: coords.lat,
+      lng: coords.lng,
+      riskScore: 76,
+      riskBand: 'High Risk',
+      timeWindow: '10 AM – 3 PM',
+      relatedCases: 4,
+      radiusMeters: 1500,
+      type: 'predicted',
+      description: `Target high-velocity cash-out zone identified at ${district}, ${state} banking corridor`,
+    };
+  };
+
   const handleStateChange = (state) => {
     setSelectedState(state);
     const districts = STATE_DISTRICTS[state] || [];
     if (districts.length > 0) {
       const firstDistrict = districts[0];
       setSelectedDistrict(firstDistrict);
-      const matchSpot = HOTSPOTS.find((h) => h.district === firstDistrict || h.state === state);
-      if (matchSpot) {
-        setSelectedHotspot(matchSpot);
-      }
+      const spot = getDistrictHotspot(state, firstDistrict);
+      setSelectedHotspot(spot);
+      setCoordsDisplay(`${spot.lat.toFixed(4)}° N, ${spot.lng.toFixed(4)}° E`);
     }
   };
 
   const handleDistrictChange = (district) => {
     setSelectedDistrict(district);
-    const matchSpot = HOTSPOTS.find((h) => h.district === district);
-    if (matchSpot) {
-      setSelectedHotspot(matchSpot);
-      setShowPopup(true);
-    }
+    const spot = getDistrictHotspot(selectedState, district);
+    setSelectedHotspot(spot);
+    setShowPopup(true);
+    setCoordsDisplay(`${spot.lat.toFixed(4)}° N, ${spot.lng.toFixed(4)}° E`);
   };
 
   const handleApplyFilters = () => {
-    const matchSpot = HOTSPOTS.find((h) => h.district === selectedDistrict || h.state === selectedState);
-    if (matchSpot) {
-      setSelectedHotspot(matchSpot);
-      setShowPopup(true);
-    }
+    const spot = getDistrictHotspot(selectedState, selectedDistrict);
+    setSelectedHotspot(spot);
+    setShowPopup(true);
+    setCoordsDisplay(`${spot.lat.toFixed(4)}° N, ${spot.lng.toFixed(4)}° E`);
     setFilterNotice(`Filters active: ${selectedDistrict}, ${selectedState} (${selectedRisk})`);
     setTimeout(() => {
       setFilterNotice(null);
@@ -102,10 +118,18 @@ export default function IntelligenceMap() {
           </div>
 
           <div className="relative">
-            <select className="appearance-none bg-white border border-slate-200 rounded-xl px-3.5 py-2 pr-8 text-xs font-semibold text-slate-800 shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer">
-              <option>Last 30 Days</option>
-              <option>Last 7 Days</option>
-              <option>Year to Date</option>
+            <select
+              value={dateRange}
+              onChange={(e) => {
+                setDateRange(e.target.value);
+                setFilterNotice(`Time window set to ${e.target.value}`);
+                setTimeout(() => setFilterNotice(null), 3000);
+              }}
+              className="appearance-none bg-white border border-slate-200 rounded-xl px-3.5 py-2 pr-8 text-xs font-semibold text-slate-800 shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
+            >
+              <option value="Last 30 Days">Last 30 Days</option>
+              <option value="Last 7 Days">Last 7 Days</option>
+              <option value="Year to Date">Year to Date</option>
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
@@ -139,10 +163,11 @@ export default function IntelligenceMap() {
                   onChange={(e) => handleStateChange(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                 >
-                  <option value="Gujarat">Gujarat</option>
-                  <option value="Maharashtra">Maharashtra</option>
-                  <option value="Rajasthan">Rajasthan</option>
-                  <option value="Delhi NCR">Delhi NCR</option>
+                  {Object.keys(STATE_DISTRICTS).sort().map((st) => (
+                    <option key={st} value={st}>
+                      {st}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -169,7 +194,7 @@ export default function IntelligenceMap() {
                 </label>
                 <div className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-medium">
                   <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                  <span>01 Oct 2026 - 12 Oct 2026</span>
+                  <span>{dateRange === 'Last 7 Days' ? '06 Oct 2026 - 12 Oct 2026' : dateRange === 'Last 30 Days' ? '12 Sep 2026 - 12 Oct 2026' : '01 Apr 2026 - 12 Oct 2026'}</span>
                 </div>
               </div>
 

@@ -47,7 +47,9 @@ import {
 } from 'recharts';
 import { useCaseModal } from '../components/layout/Layout';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { ALL_INDIAN_STATES } from '../data/indiaGeodata';
 
 // ── Fallback datasets keyed by date-range for zero-latency initial render ──
 const DATA_BY_RANGE = {
@@ -340,6 +342,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { openCaseModal } = useCaseModal();
   const { isDark } = useTheme();
+  const { user } = useAuth();
 
   // Filter States
   const [dateRange, setDateRange] = useState('Last 7 Days');
@@ -390,27 +393,167 @@ export default function Dashboard() {
     return () => clearInterval(timer);
   }, [fetchDashboardData]);
 
-  // Combine Live Data or Fallback
+  // Combine Live Data or Fallback with dynamic scaling
   const fallback = DATA_BY_RANGE[dateRange] || DATA_BY_RANGE['Last 7 Days'];
+
+  const STATE_FACTORS = {
+    'All India': 1.0,
+    'Maharashtra': 0.24,
+    'Delhi NCR': 0.20,
+    'Gujarat': 0.16,
+    'Karnataka': 0.15,
+    'Uttar Pradesh': 0.18,
+    'Tamil Nadu': 0.13,
+    'Telangana': 0.12,
+    'West Bengal': 0.14,
+    'Rajasthan': 0.10,
+    'Punjab': 0.08,
+    'Haryana': 0.09,
+    'Bihar': 0.09,
+    'Madhya Pradesh': 0.09,
+    'Kerala': 0.08,
+    'Andhra Pradesh': 0.09,
+    'Odisha': 0.07,
+    'Jharkhand': 0.07,
+    'Assam': 0.06,
+    'Goa': 0.04,
+    'Chandigarh': 0.04,
+    'Jammu & Kashmir': 0.05,
+    'Himachal Pradesh': 0.04,
+    'Uttarakhand': 0.05,
+    'Chhattisgarh': 0.05,
+  };
+
+  const FRAUD_FACTORS = {
+    'All Types': 1.0,
+    'Investment Scam': 0.42,
+    'UPI Fraud': 0.28,
+    'Phishing Ring': 0.16,
+    'Fake Job / Loan': 0.14,
+    'Card Cloning / OTP': 0.12,
+    'Cyber Extortion': 0.08,
+  };
+
   const D = useMemo(() => {
-    if (!liveData) return fallback;
+    // If liveData is fresh and matches currently selected filters, prioritize it
+    if (
+      liveData &&
+      (!liveData.state || liveData.state === selectedState) &&
+      (!liveData.fraud_type || liveData.fraud_type === selectedFraudType) &&
+      (!liveData.time_range || liveData.time_range === dateRange)
+    ) {
+      return {
+        kpi: liveData.kpi || fallback.kpi,
+        caseTrend: liveData.caseTrend || fallback.caseTrend,
+        fraudType: liveData.fraudType || fallback.fraudType,
+        fraudTotal: liveData.fraudTotal || fallback.fraudTotal,
+        cityRisk: liveData.cityRisk || fallback.cityRisk,
+        timeWindow: liveData.timeWindow || fallback.timeWindow,
+        peakWindow: liveData.peakWindow || fallback.peakWindow,
+        modelAccuracy: liveData.modelAccuracy || fallback.modelAccuracy,
+        f1Score: liveData.f1Score || fallback.f1Score,
+        clusterDrift: liveData.clusterDrift || fallback.clusterDrift,
+        pipeline: liveData.pipeline || fallback.pipeline,
+        avgResolution: liveData.avgResolution || fallback.avgResolution,
+        totalRecovered: liveData.totalRecovered || fallback.totalRecovered,
+        centroid: liveData.centroid || fallback.centroid,
+      };
+    }
+
+    // Dynamic responsive fallback calculation
+    const stMult = STATE_FACTORS[selectedState] ?? 0.06;
+    const frMult = FRAUD_FACTORS[selectedFraudType] ?? 0.20;
+    const combo = Math.max(0.02, stMult * frMult);
+
+    const baseTotalCases = parseInt(fallback.kpi.totalCases.replace(/,/g, ''), 10) || 1200;
+    const baseActive = parseInt(fallback.kpi.activeInvest.replace(/,/g, ''), 10) || 340;
+    const baseRisk = parseInt(fallback.kpi.highRiskAlerts.replace(/,/g, ''), 10) || 68;
+
+    const scaledTotalCases = Math.max(14, Math.round(baseTotalCases * combo));
+    const scaledActive = Math.max(4, Math.round(baseActive * combo));
+    const scaledRisk = Math.max(2, Math.round(baseRisk * combo));
+
+    // Dynamic Case Trend
+    const dynamicTrend = (fallback.caseTrend || []).map((pt) => ({
+      month: pt.month,
+      registered: Math.max(3, Math.round(pt.registered * combo)),
+      resolved: Math.max(2, Math.round(pt.resolved * combo)),
+    }));
+
+    // Dynamic City Risk tailored to the chosen State
+    let dynamicCityRisk = [];
+    if (selectedState !== 'All India' && ALL_INDIAN_STATES[selectedState]) {
+      const stateCities = ALL_INDIAN_STATES[selectedState].slice(0, 6);
+      dynamicCityRisk = stateCities.map((cityName, idx) => {
+        const risk = Math.max(32, Math.min(94, 88 - idx * 10));
+        const cases = Math.max(5, Math.round(scaledTotalCases * Math.max(0.08, 0.36 - idx * 0.05)));
+        const color = risk >= 75 ? '#EF4444' : risk >= 55 ? '#F97316' : '#3B82F6';
+        return { city: cityName, risk, cases, color };
+      });
+    } else {
+      dynamicCityRisk = (fallback.cityRisk || []).map((item) => ({
+        ...item,
+        cases: Math.max(8, Math.round(item.cases * combo)),
+      }));
+    }
+
+    // Dynamic Fraud Type Distribution
+    const baseAmountCr = parseFloat(fallback.fraudTotal.replace(/[^\d.]/g, '')) || 28.6;
+    const dynamicTotalAmount = Math.max(0.3, parseFloat((baseAmountCr * combo).toFixed(1)));
+    const totalAmountStr = `₹${dynamicTotalAmount} Cr`;
+
+    let dynamicFraudType = [];
+    if (selectedFraudType !== 'All Types') {
+      dynamicFraudType = [
+        { name: selectedFraudType, value: 100, amount: totalAmountStr, color: '#2563EB' }
+      ];
+    } else {
+      dynamicFraudType = (fallback.fraudType || []).map((ft) => ({
+        ...ft,
+        amount: `₹${Math.max(0.1, parseFloat((parseFloat(ft.amount.replace(/[^\d.]/g, '') || 5) * stMult).toFixed(1)))} Cr`,
+      }));
+    }
+
+    // Dynamic Pipeline Funnel
+    const dynamicPipeline = [
+      { stage: 'Reported', count: scaledTotalCases, pct: '100%', color: 'bg-blue-500' },
+      { stage: 'Investigating', count: Math.max(3, Math.round(scaledTotalCases * 0.69)), pct: '69%', color: 'bg-indigo-500' },
+      { stage: 'Mule Accounts Freezed', count: Math.max(2, Math.round(scaledTotalCases * 0.43)), pct: '43%', color: 'bg-cyan-500' },
+      { stage: 'Accused Identified', count: Math.max(1, Math.round(scaledTotalCases * 0.26)), pct: '26%', color: 'bg-amber-500' },
+      { stage: 'Chargesheet Filed', count: Math.max(1, Math.round(scaledTotalCases * 0.15)), pct: '15%', color: 'bg-purple-500' },
+      { stage: 'Funds Recovered', count: Math.max(1, Math.round(scaledTotalCases * 0.11)), pct: '11%', color: 'bg-emerald-500' },
+    ];
+
     return {
-      kpi: liveData.kpi || fallback.kpi,
-      caseTrend: liveData.caseTrend || fallback.caseTrend,
-      fraudType: liveData.fraudType || fallback.fraudType,
-      fraudTotal: liveData.fraudTotal || fallback.fraudTotal,
-      cityRisk: liveData.cityRisk || fallback.cityRisk,
-      timeWindow: liveData.timeWindow || fallback.timeWindow,
-      peakWindow: liveData.peakWindow || fallback.peakWindow,
-      modelAccuracy: liveData.modelAccuracy || fallback.modelAccuracy,
-      f1Score: liveData.f1Score || fallback.f1Score,
-      clusterDrift: liveData.clusterDrift || fallback.clusterDrift,
-      pipeline: liveData.pipeline || fallback.pipeline,
-      avgResolution: liveData.avgResolution || fallback.avgResolution,
-      totalRecovered: liveData.totalRecovered || fallback.totalRecovered,
-      centroid: liveData.centroid || fallback.centroid,
+      kpi: {
+        totalCases: scaledTotalCases.toLocaleString(),
+        totalTrend: fallback.kpi.totalTrend,
+        totalTrendLabel: fallback.kpi.totalTrendLabel,
+        activeInvest: scaledActive.toLocaleString(),
+        activeTrend: fallback.kpi.activeTrend,
+        activeTrendLabel: fallback.kpi.activeTrendLabel,
+        highRiskAlerts: scaledRisk.toLocaleString(),
+        riskTrend: fallback.kpi.riskTrend,
+        riskTrendLabel: fallback.kpi.riskTrendLabel,
+        accuracy: fallback.kpi.accuracy,
+        accTrend: fallback.kpi.accTrend,
+        accTrendLabel: fallback.kpi.accTrendLabel,
+      },
+      caseTrend: dynamicTrend,
+      fraudType: dynamicFraudType,
+      fraudTotal: totalAmountStr,
+      cityRisk: dynamicCityRisk,
+      timeWindow: fallback.timeWindow,
+      peakWindow: fallback.peakWindow,
+      modelAccuracy: fallback.modelAccuracy,
+      f1Score: fallback.f1Score,
+      clusterDrift: fallback.clusterDrift,
+      pipeline: dynamicPipeline,
+      avgResolution: fallback.avgResolution,
+      totalRecovered: `₹${Math.max(0.4, (4.8 * combo).toFixed(1))} Cr Recovered`,
+      centroid: selectedState !== 'All India' ? `${selectedState} Capital Zone` : fallback.centroid,
     };
-  }, [liveData, fallback]);
+  }, [liveData, fallback, selectedState, selectedFraudType, dateRange]);
 
   const activities = useMemo(() => {
     return liveData?.recentActivities || DEFAULT_ACTIVITIES;
@@ -488,15 +631,45 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              Executive Dashboard
+              {user?.role === 'investigator'
+                ? 'Investigator Operational Console'
+                : user?.role === 'senior_officer'
+                ? 'Supervisory Command Dashboard'
+                : user?.role === 'admin'
+                ? 'Platform Governance & Telemetry'
+                : 'Executive Dashboard'}
             </h1>
-            <span className="text-[11px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-              LIVE TELEMETRY
+            <span className={`text-[11px] font-bold font-mono px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${
+              user?.role === 'investigator'
+                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900'
+                : user?.role === 'senior_officer'
+                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900'
+                : user?.role === 'admin'
+                ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900'
+                : 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900'
+            }`}>
+              <span className={`w-2 h-2 rounded-full animate-pulse ${
+                user?.role === 'investigator' ? 'bg-emerald-500' :
+                user?.role === 'senior_officer' ? 'bg-indigo-500' :
+                user?.role === 'admin' ? 'bg-purple-500' : 'bg-blue-500'
+              }`} />
+              {user?.role === 'investigator'
+                ? 'FIELD OPERATIONAL'
+                : user?.role === 'senior_officer'
+                ? 'COMMAND INTELLIGENCE'
+                : user?.role === 'admin'
+                ? 'ADMINISTRATIVE CONTROL'
+                : 'LIVE TELEMETRY'}
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-normal">
-            Real-time cybercrime forecasting, spatial withdrawal prediction, and asset recovery funnel
+            {user?.role === 'investigator'
+              ? 'Real-time cybercrime case registration, spatial ATM cash-out predictions, and suspect lead analysis'
+              : user?.role === 'senior_officer'
+              ? 'Jurisdiction-wide cybercrime analytics, high-risk alert authorizations, and officer workload distribution'
+              : user?.role === 'admin'
+              ? 'System telemetry, cryptographic audit integrity verification, and enterprise security governance'
+              : 'Real-time cybercrime forecasting, spatial withdrawal prediction, and asset recovery funnel'}
           </p>
         </div>
 
@@ -509,10 +682,10 @@ export default function Dashboard() {
               onChange={(e) => setSelectedState(e.target.value)}
               className="appearance-none bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl px-3 py-2 pr-7 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
             >
-              <option>All India</option>
-              <option>Gujarat</option>
-              <option>Maharashtra</option>
-              <option>Delhi NCR</option>
+              <option value="All India">All India (National)</option>
+              {Object.keys(ALL_INDIAN_STATES).sort().map((st) => (
+                <option key={st} value={st}>{st}</option>
+              ))}
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
@@ -524,11 +697,13 @@ export default function Dashboard() {
               onChange={(e) => setSelectedFraudType(e.target.value)}
               className="appearance-none bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl px-3 py-2 pr-7 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
             >
-              <option>All Types</option>
-              <option>Investment Scam</option>
-              <option>UPI Fraud</option>
-              <option>Phishing Ring</option>
-              <option>Fake Job / Loan</option>
+              <option value="All Types">All Types (All Categories)</option>
+              <option value="Investment Scam">Investment Scam</option>
+              <option value="UPI Fraud">UPI Fraud</option>
+              <option value="Phishing Ring">Phishing Ring</option>
+              <option value="Fake Job / Loan">Fake Job / Loan</option>
+              <option value="Card Cloning / OTP">Card Cloning / OTP</option>
+              <option value="Cyber Extortion">Cyber Extortion</option>
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>

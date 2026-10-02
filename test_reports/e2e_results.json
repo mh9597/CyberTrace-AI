@@ -1,0 +1,210 @@
+[
+  {
+    "category": "Public Portal",
+    "test_name": "Landing Page Renders",
+    "role": "GUEST",
+    "status": "PASSED",
+    "details": "Homepage title and hero sections verified",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\01_landing_page.png"
+  },
+  {
+    "category": "Authentication",
+    "test_name": "Login Page Loads",
+    "role": "GUEST",
+    "status": "PASSED",
+    "details": "Email & password inputs ready",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\02_login_page.png"
+  },
+  {
+    "category": "Route Protection",
+    "test_name": "Direct /dashboard redirects to /login",
+    "role": "GUEST",
+    "status": "PASSED",
+    "details": "Unauthenticated user intercepted",
+    "screenshot": null
+  },
+  {
+    "category": "Authentication",
+    "test_name": "Invalid Login Rejection",
+    "role": "GUEST",
+    "status": "PASSED",
+    "details": "Displays authentication error banner",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\03_invalid_login_error.png"
+  },
+  {
+    "category": "Role: Investigator",
+    "test_name": "Login & Dashboard Access",
+    "role": "INVESTIGATOR",
+    "status": "PASSED",
+    "details": "Authenticated successfully into dashboard",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\04_investigator_dashboard.png"
+  },
+  {
+    "category": "Role: Investigator",
+    "test_name": "Navbar Restriction",
+    "role": "INVESTIGATOR",
+    "status": "PASSED",
+    "details": "Security Center hidden from navbar navigation",
+    "screenshot": null
+  },
+  {
+    "category": "Role: Investigator",
+    "test_name": "Direct /security Access Restricted",
+    "role": "INVESTIGATOR",
+    "status": "PASSED",
+    "details": "RestrictedAccess screen displayed correctly",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\05_investigator_security_restricted.png"
+  },
+  {
+    "category": "Navigation",
+    "test_name": "RestrictedAccess Return to Dashboard",
+    "role": "INVESTIGATOR",
+    "status": "PASSED",
+    "details": "Button navigates back to dashboard",
+    "screenshot": null
+  },
+  {
+    "category": "Role: Investigator",
+    "test_name": "Create Complaint Permission",
+    "role": "INVESTIGATOR",
+    "status": "PASSED",
+    "details": "Register New Complaint CTA present and available",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\06_investigator_complaints_allowed.png"
+  },
+  {
+    "category": "UI Component",
+    "test_name": "Complaints Text Search",
+    "role": "INVESTIGATOR",
+    "status": "PASSED",
+    "details": "Search input dynamically filters records",
+    "screenshot": null
+  },
+  {
+    "category": "UI Interaction",
+    "test_name": "Complaint Intake Modal",
+    "role": "INVESTIGATOR",
+    "status": "PASSED",
+    "details": "Modal opens and closes smoothly",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\06b_complaint_modal.png"
+  },
+  {
+    "category": "Forensic Intelligence",
+    "test_name": "Prediction Center Operational",
+    "role": "INVESTIGATOR",
+    "status": "PASSED",
+    "details": "AI predictions and candidate zones loaded",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\07_investigator_prediction_center.png"
+  },
+  {
+    "category": "Forensic Intelligence",
+    "test_name": "Intelligence Map Render",
+    "role": "INVESTIGATOR",
+    "status": "PASSED",
+    "details": "Geospatial map loaded",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\08_investigator_map.png"
+  },
+  {
+    "category": "Forensic Intelligence",
+    "test_name": "Transaction Network Visualization",
+    "role": "INVESTIGATOR",
+    "status": "PASSED",
+    "details": "Multi-hop graph rendered",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\09_investigator_network.png"
+  },
+  {
+    "category": "Incident Response",
+    "test_name": "Alerts List Operational",
+    "role": "INVESTIGATOR",
+    "status": "PASSED",
+    "details": "Alerts stream viewable",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\10_investigator_alerts.png"
+  },
+  {
+    "category": "Role: Senior Officer",
+    "test_name": "Login & Dashboard Access",
+    "role": "SENIOR_OFFICER",
+    "status": "PASSED",
+    "details": "Senior Officer logged in successfully",
+    "screenshot": null
+  },
+  {
+    "category": "Role: Senior Officer",
+    "test_name": "Complaints Supervisory Review Mode",
+    "role": "SENIOR_OFFICER",
+    "status": "PASSED",
+    "details": "Create complaint restricted; Review badge shown",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\11_senior_complaints_review_mode.png"
+  },
+  {
+    "category": "Role: Senior Officer",
+    "test_name": "Security Center Limited View",
+    "role": "SENIOR_OFFICER",
+    "status": "PASSED",
+    "details": "Audit logs visible, User Governance tab excluded",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\12_senior_security_limited.png"
+  },
+  {
+    "category": "Role: Admin",
+    "test_name": "Login & Dashboard Access",
+    "role": "ADMIN",
+    "status": "PASSED",
+    "details": "Admin logged in successfully",
+    "screenshot": null
+  },
+  {
+    "category": "Role: Admin",
+    "test_name": "Complaints Archival Mode",
+    "role": "ADMIN",
+    "status": "PASSED",
+    "details": "Admin sees Archival Dossier View",
+    "screenshot": null
+  },
+  {
+    "category": "Role: Admin",
+    "test_name": "User Governance & RBAC Management",
+    "role": "ADMIN",
+    "status": "PASSED",
+    "details": "Full user table and role modifiers accessible",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\13_admin_user_governance.png"
+  },
+  {
+    "category": "Responsive Design",
+    "test_name": "Viewport Desktop (1280x800)",
+    "role": "ALL",
+    "status": "PASSED",
+    "details": "Rendered without breaking layout",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\14_responsive_desktop.png"
+  },
+  {
+    "category": "Responsive Design",
+    "test_name": "Viewport Tablet (768x1024)",
+    "role": "ALL",
+    "status": "PASSED",
+    "details": "Rendered without breaking layout",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\14_responsive_tablet.png"
+  },
+  {
+    "category": "Responsive Design",
+    "test_name": "Viewport Mobile (375x667)",
+    "role": "ALL",
+    "status": "PASSED",
+    "details": "Rendered without breaking layout",
+    "screenshot": "d:\\CyberTrace-AI-main\\test_reports\\screenshots\\14_responsive_mobile.png"
+  },
+  {
+    "category": "Accessibility",
+    "test_name": "Form Controls & Labels",
+    "role": "ALL",
+    "status": "PASSED",
+    "details": "Semantic input fields and submit button present",
+    "screenshot": null
+  },
+  {
+    "category": "Accessibility",
+    "test_name": "Heading Elements",
+    "role": "ALL",
+    "status": "PASSED",
+    "details": "Found 2 semantic headings",
+    "screenshot": null
+  }
+]

@@ -27,6 +27,228 @@ export default function ForensicDossierModal({ complaintId, isOpen, onClose }) {
     loadDossier();
   }, [isOpen, complaintId]);
 
+  const handlePrint = () => {
+    if (!dossier) return;
+
+    const printFrame = document.createElement('iframe');
+    printFrame.style.position = 'fixed';
+    printFrame.style.right = '0';
+    printFrame.style.bottom = '0';
+    printFrame.style.width = '0';
+    printFrame.style.height = '0';
+    printFrame.style.border = '0';
+    document.body.appendChild(printFrame);
+
+    const doc = printFrame.contentWindow.document;
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Court Dossier - ${dossier.complaint_id}</title>
+          <style>
+            @page {
+              size: A4;
+              margin: 10mm 15mm;
+            }
+            * { box-sizing: border-box; }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              color: #0f172a;
+              background: #ffffff;
+              margin: 0;
+              padding: 0;
+              font-size: 11px;
+              line-height: 1.35;
+            }
+            .banner {
+              text-align: center;
+              border: 1.5px solid #0f172a;
+              background-color: #f8fafc;
+              padding: 8px;
+              border-radius: 6px;
+              margin-bottom: 12px;
+            }
+            .grid {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 8px;
+              margin-bottom: 12px;
+            }
+            .card {
+              border: 1px solid #cbd5e1;
+              background: #f8fafc;
+              padding: 6px 8px;
+              border-radius: 4px;
+            }
+            .label {
+              font-size: 9px;
+              text-transform: uppercase;
+              color: #64748b;
+              font-weight: 700;
+            }
+            .val {
+              font-size: 11px;
+              font-weight: 700;
+              color: #0f172a;
+              margin-top: 2px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 6px 0 10px 0;
+              font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+              font-size: 10px;
+            }
+            th, td {
+              border: 1px solid #cbd5e1;
+              padding: 4px 6px;
+              text-align: left;
+            }
+            th {
+              background: #f1f5f9;
+              font-weight: 700;
+              text-transform: uppercase;
+              font-size: 9px;
+            }
+            .cashout {
+              background: #fee2e2;
+              color: #991b1b;
+              border: 1px solid #f87171;
+              font-size: 8px;
+              font-weight: bold;
+              padding: 1px 3px;
+              border-radius: 3px;
+              margin-left: 3px;
+            }
+            .box {
+              border: 1px solid #cbd5e1;
+              background: #f8fafc;
+              padding: 6px 10px;
+              border-radius: 4px;
+              margin-bottom: 10px;
+            }
+            pre {
+              font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+              font-size: 9px;
+              line-height: 1.3;
+              white-space: pre-wrap;
+              word-break: break-all;
+              background: #f8fafc;
+              border: 1px solid #cbd5e1;
+              padding: 6px 8px;
+              border-radius: 4px;
+              margin: 3px 0 0 0;
+            }
+            .footer {
+              border-top: 1px solid #94a3b8;
+              padding-top: 5px;
+              font-size: 9px;
+              font-family: monospace;
+              color: #475569;
+              display: flex;
+              justify-content: space-between;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="banner">
+            <div style="font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #0284c7;">
+              Government of India &bull; Inter-Agency Cyber Task Force
+            </div>
+            <div style="font-size: 13px; font-weight: 800; text-transform: uppercase; margin: 2px 0;">
+              Electronic Evidence Investigation Dossier
+            </div>
+            <div style="font-size: 9px; color: #64748b; font-family: monospace;">
+              Dossier ID: ${dossier.dossier_id} &bull; Generated: ${new Date(dossier.generated_at).toLocaleString()}
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="card">
+              <div class="label">Case Reference</div>
+              <div class="val" style="color: #0369a1; font-family: monospace;">${dossier.complaint_id}</div>
+            </div>
+            <div class="card">
+              <div class="label">Complainant</div>
+              <div class="val">${dossier.case_summary?.victim_name || 'N/A'}</div>
+            </div>
+            <div class="card">
+              <div class="label">Defrauded Amount</div>
+              <div class="val" style="color: #b91c1c;">Rs.${dossier.case_summary?.defrauded_amount?.toLocaleString() || 0}</div>
+            </div>
+            <div class="card">
+              <div class="label">Master Checksum</div>
+              <div class="val" style="color: #047857;">Verified SHA-256</div>
+            </div>
+          </div>
+
+          <div style="font-weight: bold; font-size: 10px; text-transform: uppercase; margin-bottom: 2px; font-family: monospace;">
+            Multi-Hop Transaction Laundering Trail (${dossier.transaction_trail?.length || 0} Hops)
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Hop</th>
+                <th>Reference / UTR</th>
+                <th>Origin Account</th>
+                <th>Target Account</th>
+                <th style="text-align: right;">Amount (INR)</th>
+                <th>Channel / Flags</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(dossier.transaction_trail || []).map((t) => `
+                <tr>
+                  <td style="font-weight: bold; color: #0369a1;">Layer ${t.hop}</td>
+                  <td>${t.reference}</td>
+                  <td>${t.source_account}</td>
+                  <td style="font-weight: 600;">${t.dest_account} ${t.is_terminal_cashout ? '<span class="cashout">CASH-OUT ATM</span>' : ''}</td>
+                  <td style="text-align: right; font-weight: bold;">Rs.${(t.amount_inr || 0).toLocaleString()}</td>
+                  <td>${t.txn_type || 'TRANSFER'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          ${dossier.ml_forecast_summary ? `
+            <div class="box">
+              <div style="font-weight: bold; font-size: 9px; text-transform: uppercase; font-family: monospace; margin-bottom: 2px;">
+                AI Predictive Forecast Analytics
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; font-size: 9.5px;">
+                <div><span style="color:#64748b;">Model:</span> <strong>${dossier.ml_forecast_summary.model_version}</strong></div>
+                <div><span style="color:#64748b;">Projected Cluster:</span> <strong style="color:#0284c7;">${dossier.ml_forecast_summary.candidate_zone}</strong></div>
+                <div><span style="color:#64748b;">Calibrated Risk:</span> <strong style="color:#b91c1c;">${((dossier.ml_forecast_summary.risk_estimate || 0) * 100).toFixed(0)}% (${dossier.ml_forecast_summary.risk_band})</strong></div>
+              </div>
+            </div>
+          ` : ''}
+
+          <div style="margin-bottom: 8px;">
+            <div style="font-weight: bold; font-size: 9px; text-transform: uppercase; font-family: monospace; margin-bottom: 2px;">
+              Statutory Certificate of Electronic Authenticity (Section 63 BSA / 65B IEA)
+            </div>
+            <pre>${dossier.bsa_section63_certificate || ''}</pre>
+          </div>
+
+          <div class="footer">
+            <span>Master Case SHA-256: ${dossier.master_sha256_fingerprint}</span>
+            <span style="color: #047857; font-weight: bold;">Tamper-Proof &bull; Ready for Magistrate Filing</span>
+          </div>
+        </body>
+      </html>
+    `);
+    doc.close();
+
+    printFrame.contentWindow.focus();
+    setTimeout(() => {
+      printFrame.contentWindow.print();
+      setTimeout(() => {
+        try { document.body.removeChild(printFrame); } catch (_) {}
+      }, 1000);
+    }, 250);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -212,7 +434,7 @@ export default function ForensicDossierModal({ complaintId, isOpen, onClose }) {
               Close
             </button>
             <button
-              onClick={() => window.print()}
+              onClick={handlePrint}
               disabled={!dossier}
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-lg active:scale-95 disabled:opacity-50"
             >

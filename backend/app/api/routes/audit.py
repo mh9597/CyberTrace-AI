@@ -2,7 +2,7 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from backend.app.db.database import get_db
-from backend.app.api.deps import get_current_principal, require_role
+from backend.app.api.deps import get_current_principal, require_principal_role
 from backend.app.domain.entities import UserPrincipal
 from backend.app.services.audit_service import get_audit_logs, verify_evidence_hash
 
@@ -15,7 +15,7 @@ def list_audit_trail(
     limit: int = Query(50, ge=1, le=100),
     action: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: UserPrincipal = Depends(get_current_principal),
+    current_user: UserPrincipal = Depends(require_principal_role(["admin", "senior_officer"])),
 ):
     logs, total = get_audit_logs(db, skip=skip, limit=limit, action=action)
     return {
@@ -40,7 +40,7 @@ def list_audit_trail(
 def check_evidence_integrity(
     evidence_id: int,
     db: Session = Depends(get_db),
-    current_user: UserPrincipal = Depends(get_current_principal),
+    current_user: UserPrincipal = Depends(require_principal_role(["admin", "senior_officer"])),
 ):
     res = verify_evidence_hash(db, evidence_id)
     if "error" in res:

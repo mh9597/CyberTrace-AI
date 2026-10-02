@@ -4,11 +4,13 @@ import api from '../services/api';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+  // Clear any legacy permanent localStorage session on startup to give a fresh session
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('cybertrace_user');
-    if (saved) {
+    // Check sessionStorage first (persists on refresh, clears when tab/window is closed)
+    const sessionSaved = sessionStorage.getItem('cybertrace_user');
+    if (sessionSaved) {
       try {
-        return JSON.parse(saved);
+        return JSON.parse(sessionSaved);
       } catch (e) {
         return null;
       }
@@ -17,13 +19,24 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(false);
 
+  // Clear legacy localStorage once on startup
+  useEffect(() => {
+    try {
+      localStorage.removeItem('cybertrace_token');
+      localStorage.removeItem('cybertrace_user');
+    } catch (e) {
+      // Ignore
+    }
+  }, []);
+
   const login = async (email, password) => {
     setLoading(true);
     try {
       const res = await api.post('/auth/login', { email, password });
       const { access_token, user: userData } = res.data;
-      localStorage.setItem('cybertrace_token', access_token);
-      localStorage.setItem('cybertrace_user', JSON.stringify(userData));
+      // Store in sessionStorage: preserves session across page refreshes, automatically resets when window is closed
+      sessionStorage.setItem('cybertrace_token', access_token);
+      sessionStorage.setItem('cybertrace_user', JSON.stringify(userData));
       setUser(userData);
       return { success: true };
     } catch (err) {
@@ -46,7 +59,6 @@ export const AuthProvider = ({ children }) => {
         role,
         badge_number,
       });
-      // Deliberately do not auto-login so user must proceed through the login screen first
       return { success: true };
     } catch (err) {
       return {
@@ -63,7 +75,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.put('/auth/me', profileData);
       const updatedUser = res.data;
-      localStorage.setItem('cybertrace_user', JSON.stringify(updatedUser));
+      sessionStorage.setItem('cybertrace_user', JSON.stringify(updatedUser));
       setUser(updatedUser);
       return { success: true, user: updatedUser };
     } catch (err) {
@@ -82,6 +94,8 @@ export const AuthProvider = ({ children }) => {
     } catch (e) {
       // Ignore
     }
+    sessionStorage.removeItem('cybertrace_token');
+    sessionStorage.removeItem('cybertrace_user');
     localStorage.removeItem('cybertrace_token');
     localStorage.removeItem('cybertrace_user');
     setUser(null);

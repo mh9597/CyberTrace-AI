@@ -14,14 +14,14 @@ import {
 } from 'lucide-react';
 import { MOCK_COMPLAINTS } from '../../data/mockData';
 
-export default function CaseDetailsModal({ caseId = 'CT-3026-002', onClose }) {
+export default function CaseDetailsModal({ caseId = 'CT-3026-002', customData = null, onClose }) {
   const [activeTab, setActiveTab] = useState('Overview');
   const [notes, setNotes] = useState(
     'Initial analysis indicates rapid UPI diversion through multi-tier mule accounts. Primary ATM withdrawal predicted in Satellite area.'
   );
   const [notesSaved, setNotesSaved] = useState(false);
 
-  const caseData =
+  const caseData = customData ||
     MOCK_COMPLAINTS.find((c) => c.id === caseId) || MOCK_COMPLAINTS[1];
 
   const tabs = [
@@ -102,6 +102,14 @@ export default function CaseDetailsModal({ caseId = 'CT-3026-002', onClose }) {
                 <span className="font-semibold text-slate-900">{caseData.complainant}</span>
               </div>
               <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-slate-500">Bank Route</span>
+                <span className="font-semibold text-slate-900 text-right">{caseData.bank || 'SBI'} &rarr; {caseData.suspectBank || 'HDFC Bank'}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-slate-500">Jurisdiction</span>
+                <span className="font-semibold text-slate-900">{caseData.city || 'Ahmedabad'}, {caseData.state || 'Gujarat'}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
                 <span className="text-slate-500">Fraud Type</span>
                 <span className="font-semibold text-slate-900">{caseData.fraudType}</span>
               </div>
@@ -171,10 +179,10 @@ export default function CaseDetailsModal({ caseId = 'CT-3026-002', onClose }) {
 
             <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-100 space-y-1 text-center">
               <h4 className="font-bold text-xs text-slate-900">
-                {caseData.location || 'Ahmedabad - Satellite'}
+                {caseData.location || (caseData.city ? `${caseData.city} - ${caseData.suspectBank || 'Mule ATM Cluster'}` : 'Ahmedabad - Satellite')}
               </h4>
               <p className="text-xs font-semibold text-red-600">
-                {caseData.probability || 82}% probability
+                {caseData.probability || caseData.riskScore || 82}% probability
               </p>
               <p className="text-[11px] text-slate-500">
                 {caseData.timeWindow || '12 Oct 2026, 10 AM - 2 PM'}

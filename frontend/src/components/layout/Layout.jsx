@@ -5,7 +5,7 @@ import CaseDetailsModal from '../modals/CaseDetailsModal';
 import AICopilotBubble from '../common/AICopilotBubble';
 
 export const CaseModalContext = createContext({
-  openCaseModal: (caseId) => {},
+  openCaseModal: (caseId, caseData = null) => {},
   closeCaseModal: () => {},
 });
 
@@ -13,13 +13,16 @@ export const useCaseModal = () => useContext(CaseModalContext);
 
 export default function Layout() {
   const [activeCaseId, setActiveCaseId] = useState(null);
+  const [activeCaseData, setActiveCaseData] = useState(null);
 
-  const openCaseModal = (caseId = 'CT-3026-002') => {
+  const openCaseModal = (caseId = 'CT-3026-002', caseData = null) => {
     setActiveCaseId(caseId);
+    setActiveCaseData(caseData);
   };
 
   const closeCaseModal = () => {
     setActiveCaseId(null);
+    setActiveCaseData(null);
   };
 
   return (
@@ -38,7 +41,7 @@ export default function Layout() {
 
         {/* Global Case Details Modal */}
         {activeCaseId && (
-          <CaseDetailsModal caseId={activeCaseId} onClose={closeCaseModal} />
+          <CaseDetailsModal caseId={activeCaseId} customData={activeCaseData} onClose={closeCaseModal} />
         )}
       </div>
     </CaseModalContext.Provider>

@@ -158,6 +158,7 @@ def _generate_offline_copilot_response(db: Session, message: str, case_id: Optio
     if not complaint:
         complaint = db.query(Complaint).first()
 
+    amount_str = f"{complaint.amount:,.2f}" if (complaint and complaint.amount is not None) else "8,00,000.00"
     txns = db.query(Transaction).filter(Transaction.complaint_id == complaint.id).order_by(Transaction.hop_level).all() if complaint else []
     predictions = db.query(Prediction).filter(Prediction.complaint_id == complaint.id).order_by(desc(Prediction.created_at)).all() if complaint else []
     
@@ -167,7 +168,7 @@ def _generate_offline_copilot_response(db: Session, message: str, case_id: Optio
     if any(w in msg_lower for w in ["hi", "hello", "namaste", "hey", "who are you"]):
         return (
             f"**Namaste Officer.** CyberTrace AI Investigation Copilot is active and tracking **Case {complaint.complaint_id if complaint else 'CT-2026-001'}**.\n\n"
-            f"- **Victim**: {complaint.victim_name if complaint else 'Rajesh Patel'} (Loss: ₹{complaint.amount:,.2f if complaint and complaint.amount else '8,00,000'})\n"
+            f"- **Victim**: {complaint.victim_name if complaint else 'Rajesh Patel'} (Loss: ₹{amount_str})\n"
             f"- **Crime Category**: {complaint.fraud_type if complaint else 'Investment Scam'}\n"
             f"- **Multi-Hop Trajectory**: {len(txns)} transactions across {len(set(t.dest_account for t in txns if t.dest_account))} mule accounts.\n"
             f"- **Predicted Cash-out**: {predictions[0].candidate_zone if predictions else 'SG Highway Axis Bank ATM Cluster'} (Window: {predictions[0].time_window_start if predictions else '12:00 PM'} - {predictions[0].time_window_end if predictions else '02:00 PM'}).\n\n"
@@ -195,7 +196,7 @@ def _generate_offline_copilot_response(db: Session, message: str, case_id: Optio
         mules = [f"`{t.dest_account}` ({t.txn_type} ₹{t.amount:,.2f})" for t in txns[:4]]
         return (
             f"### ⛓️ Forensic Mule Account Inflow / Outflow Summary\n\n"
-            f"Tracing funds for Case **{complaint.complaint_id if complaint else 'CT-2026-001'}** (Defrauded: ₹{complaint.amount:,.2f if complaint and complaint.amount else '8,00,000'}):\n\n"
+            f"Tracing funds for Case **{complaint.complaint_id if complaint else 'CT-2026-001'}** (Defrauded: ₹{amount_str}):\n\n"
             f"- **Identified Mule Accounts**:\n"
             + ("\n".join([f"  • {m}" for m in mules]) if mules else "  • HDFC Bank Mule Layer 1 (`50100492817291`)\n  • ICICI Bank Layer 2 (`194801002948`)") + "\n\n"
             f"**Legal Enforcement Actions:**\n"
@@ -208,7 +209,7 @@ def _generate_offline_copilot_response(db: Session, message: str, case_id: Optio
     return (
         f"### 📋 Case Analysis & Tactical Assessment — {complaint.complaint_id if complaint else 'CT-2026-001'}\n\n"
         f"**Case Particulars:**\n"
-        f"- **Complainant**: {complaint.victim_name if complaint else 'Complainant'} | **Loss**: ₹{complaint.amount:,.2f if complaint and complaint.amount else '8,00,000'}\n"
+        f"- **Complainant**: {complaint.victim_name if complaint else 'Complainant'} | **Loss**: ₹{amount_str}\n"
         f"- **Modus Operandi**: {complaint.fraud_type if complaint else 'Cyber Fraud'} with structured multi-tier mule distribution.\n"
         f"- **Investigation Priority**: **High / Critical** (Rapid funds dispersal detected across {len(txns)} transactions).\n\n"
         f"**Next Procedural Steps:**\n"

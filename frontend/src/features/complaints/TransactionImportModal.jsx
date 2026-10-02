@@ -59,8 +59,12 @@ export default function TransactionImportModal({ isOpen, onClose, complaintId, o
           });
           setPreviewRows(rows);
           // Check standard columns
-          const required = ['amount', 'timestamp', 'transaction_reference'];
-          const missing = required.filter((r) => !headers.includes(r));
+          const hasRef = headers.includes('transaction_reference') || headers.includes('txn_reference');
+          const missing = [];
+          if (!headers.includes('amount')) missing.push('amount');
+          if (!headers.includes('timestamp')) missing.push('timestamp');
+          if (!hasRef) missing.push('transaction_reference (or txn_reference)');
+
           if (missing.length > 0) {
             setValidationErrors([`Missing mandatory schema fields: ${missing.join(', ')}`]);
           } else {
@@ -99,6 +103,24 @@ export default function TransactionImportModal({ isOpen, onClose, complaintId, o
     }
   };
 
+  const handleLoadSampleCSV = () => {
+    const csvContent = `txn_reference,source_account,dest_account,amount,timestamp,txn_type,hop_level,is_cash_out,latitude,longitude,city,suspicious_flags,zone_name
+UTR20261001001,9825144102,50100492817291,200000,2026-10-01 09:15:00,UPI,1,false,23.0225,72.5714,Ahmedabad,ROUND_AMOUNT,Victim SBI Transfer
+UTR20261001002,50100492817291,9876543210HDFC,180000,2026-10-01 09:47:00,IMPS,2,false,23.0395,72.5295,Ahmedabad,RAPID_TRANSFER,Mule L1 Forward
+UTR20261001003,9876543210HDFC,40200198765432,180000,2026-10-01 10:12:00,NEFT,3,false,22.9734,72.5833,Anand,RAPID_TRANSFER,Mule L2 Forward
+UTR20261001004,40200198765432,ATM-HDFC-SG001,90000,2026-10-01 11:30:00,ATM,4,true,23.0204,72.5800,Ahmedabad,ATM_CASHOUT,SG Highway ATM Zone
+UTR20261001005,40200198765432,ATM-SBI-NR002,87000,2026-10-01 12:05:00,ATM,4,true,23.0469,72.5306,Ahmedabad,ATM_CASHOUT,Navrangpura ATM Zone
+UTR20261001006,50100492817291,3341900012345,150000,2026-10-01 14:20:00,UPI,2,false,19.0760,72.8777,Mumbai,CROSS_STATE,Mule Mumbai Forward
+UTR20261001007,3341900012345,ATM-AXIS-MU01,75000,2026-10-01 15:45:00,ATM,3,true,19.0596,72.8295,Mumbai,ATM_CASHOUT,Andheri ATM Zone
+UTR20261001008,3341900012345,ATM-ICICI-MU02,72000,2026-10-01 16:10:00,ATM,3,true,19.0176,72.8561,Mumbai,ATM_CASHOUT,Dadar ATM Zone
+UTR20261001009,50100492817291,6521000098765,120000,2026-10-01 18:30:00,IMPS,2,false,28.6139,77.2090,Delhi,CROSS_STATE,Mule Delhi Forward
+UTR20261001010,6521000098765,ATM-PNB-DL01,118000,2026-10-01 20:00:00,ATM,3,true,28.6304,77.2177,Delhi,ATM_CASHOUT,Connaught Place ATM Zone`;
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const sampleFile = new File([blob], 'sample_transactions_CT2026002.csv', { type: 'text/csv' });
+    handleFileChange({ target: { files: [sampleFile] } });
+  };
+
   return (
     <ModalDialog
       isOpen={isOpen}
@@ -127,6 +149,20 @@ export default function TransactionImportModal({ isOpen, onClose, complaintId, o
               Accepted formats: .csv, .json (Max: 5MB)
             </p>
           </div>
+        </div>
+
+        {/* Quick Sample Button */}
+        <div className="flex items-center justify-between p-3 rounded-xl bg-cyan-50/60 dark:bg-cyan-950/30 border border-cyan-200/80 dark:border-cyan-900/40">
+          <div className="text-xs text-cyan-900 dark:text-cyan-200">
+            <span className="font-semibold">Quick Demo File:</span> <code className="font-mono text-[11px] text-cyan-700 dark:text-cyan-400">sample_transactions_CT2026002.csv</code>
+          </div>
+          <button
+            type="button"
+            onClick={handleLoadSampleCSV}
+            className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-xs transition"
+          >
+            ⚡ Auto-Fill Sample CSV
+          </button>
         </div>
 
         {/* SHA-256 Digest Verification Preview */}

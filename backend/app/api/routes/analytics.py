@@ -112,70 +112,136 @@ def get_dashboard_analytics(
     cfg = range_config.get(time_range, range_config["Last 7 Days"])
     scale = cfg["scale"]
 
+    # State multipliers (National vs State distribution)
+    state_multipliers = {
+        "All India": 1.0,
+        "Maharashtra": 0.24,
+        "Delhi NCR": 0.20,
+        "Gujarat": 0.16,
+        "Karnataka": 0.15,
+        "Uttar Pradesh": 0.18,
+        "Tamil Nadu": 0.13,
+        "Telangana": 0.12,
+        "West Bengal": 0.14,
+        "Rajasthan": 0.10,
+        "Punjab": 0.08,
+        "Haryana": 0.09,
+        "Bihar": 0.09,
+        "Madhya Pradesh": 0.09,
+        "Kerala": 0.08,
+        "Andhra Pradesh": 0.09,
+        "Odisha": 0.07,
+        "Jharkhand": 0.07,
+        "Assam": 0.06,
+        "Goa": 0.04,
+        "Chandigarh": 0.04,
+        "Jammu & Kashmir": 0.05,
+        "Himachal Pradesh": 0.04,
+        "Uttarakhand": 0.05,
+        "Chhattisgarh": 0.05,
+    }
+    st_mult = state_multipliers.get(state, 0.05)
+
+    # Fraud type multipliers
+    fraud_multipliers = {
+        "All Types": 1.0,
+        "Investment Scam": 0.42,
+        "UPI Fraud": 0.28,
+        "Phishing Ring": 0.16,
+        "Fake Job / Loan": 0.14,
+        "Card Cloning / OTP": 0.12,
+        "Cyber Extortion": 0.08,
+    }
+    fr_mult = fraud_multipliers.get(fraud_type, 0.20)
+    combo_mult = max(0.02, st_mult * fr_mult)
+
     # Calculate dynamic KPIs:
-    computed_total_cases = cfg["base_cases"] + total_db_complaints * scale
-    computed_active_cases = cfg["base_active"] + active_investigations * scale
-    computed_risk_alerts = cfg["base_risk"] + high_risk_alerts_count * scale
+    computed_total_cases = max(12, int(cfg["base_cases"] * combo_mult + total_db_complaints * scale))
+    computed_active_cases = max(4, int(cfg["base_active"] * combo_mult + active_investigations * scale))
+    computed_risk_alerts = max(2, int(cfg["base_risk"] * combo_mult + high_risk_alerts_count * scale))
     computed_accuracy = f"{cfg['acc']}%"
 
     # 3. Dynamic Case Trend
     case_trend = []
     for i, date_label in enumerate(cfg["dates"]):
-        reg = cfg["trend_reg"][i] + (total_db_complaints * 2 if i == len(cfg["dates"]) - 1 else 0)
-        res = cfg["trend_res"][i]
+        reg = max(2, int(cfg["trend_reg"][i] * combo_mult + (total_db_complaints * 2 if i == len(cfg["dates"]) - 1 else 0)))
+        res = max(1, int(cfg["trend_res"][i] * combo_mult))
         case_trend.append({"month": date_label, "registered": reg, "resolved": res})
 
     # 4. Dynamic Fraud Types
-    # Check DB breakdown
-    db_types = (
-        db.query(Complaint.fraud_type, func.count(Complaint.id), func.sum(Complaint.amount))
-        .group_by(Complaint.fraud_type)
-        .all()
-    )
-
     base_fraud_types = [
-        {"name": "Investment Scam", "value": 42, "amount": f"₹{round(14.2 * scale, 1)} Cr", "color": "#2563EB"},
-        {"name": "UPI Fraud", "value": 28, "amount": f"₹{round(6.8 * scale, 1)} Cr", "color": "#06B6D4"},
-        {"name": "Phishing Ring", "value": 16, "amount": f"₹{round(4.1 * scale, 1)} Cr", "color": "#8B5CF6"},
-        {"name": "Fake Job / Loan", "value": 14, "amount": f"₹{round(3.5 * scale, 1)} Cr", "color": "#F59E0B"},
+        {"name": "Investment Scam", "value": 42, "amount": f"₹{round(14.2 * scale * st_mult, 1)} Cr", "color": "#2563EB"},
+        {"name": "UPI Fraud", "value": 28, "amount": f"₹{round(6.8 * scale * st_mult, 1)} Cr", "color": "#06B6D4"},
+        {"name": "Phishing Ring", "value": 16, "amount": f"₹{round(4.1 * scale * st_mult, 1)} Cr", "color": "#8B5CF6"},
+        {"name": "Fake Job / Loan", "value": 14, "amount": f"₹{round(3.5 * scale * st_mult, 1)} Cr", "color": "#F59E0B"},
     ]
 
-    total_amount_str = f"₹{round(28.6 * scale + (total_db_amount / 10000000.0), 1)} Cr"
+    total_amount_val = round(28.6 * scale * combo_mult + (total_db_amount / 10000000.0), 1)
+    total_amount_str = f"₹{max(0.4, total_amount_val)} Cr"
 
     # Filter by fraud_type if requested
     if fraud_type != "All Types":
-        fraud_types_data = [f for f in base_fraud_types if f["name"] == fraud_type]
-        if not fraud_types_data:
-            fraud_types_data = base_fraud_types
+        fraud_types_data = [
+            {"name": fraud_type, "value": 100, "amount": total_amount_str, "color": "#2563EB"},
+        ]
     else:
         fraud_types_data = base_fraud_types
 
-    # 5. City Risk Breakdown
-    all_city_risks = [
-        {"city": "Ahmedabad", "risk": 82, "cases": 420 * scale, "color": "#EF4444"},
-        {"city": "Vadodara", "risk": 64, "cases": 280 * scale, "color": "#F97316"},
-        {"city": "Surat", "risk": 48, "cases": 195 * scale, "color": "#F59E0B"},
-        {"city": "Rajkot", "risk": 36, "cases": 140 * scale, "color": "#3B82F6"},
-        {"city": "Mumbai", "risk": 28, "cases": 110 * scale, "color": "#2563EB"},
-        {"city": "Delhi", "risk": 68, "cases": 310 * scale, "color": "#EF4444"},
-        {"city": "Kolkata", "risk": 74, "cases": 340 * scale, "color": "#DC2626"},
-    ]
+    # 5. Dynamic State-wise City Risk Breakdown
+    state_cities_db = {
+        "Gujarat": [("Ahmedabad", 84, 420), ("Surat", 68, 290), ("Vadodara", 62, 210), ("Rajkot", 45, 140), ("Gandhinagar", 38, 90)],
+        "Maharashtra": [("Mumbai", 88, 540), ("Pune", 74, 380), ("Nagpur", 58, 210), ("Thane", 52, 180), ("Nashik", 42, 120)],
+        "Delhi NCR": [("New Delhi", 90, 580), ("Gurugram", 82, 390), ("Noida", 78, 320), ("South Delhi", 64, 240), ("Central Delhi", 55, 160)],
+        "Karnataka": [("Bengaluru", 89, 560), ("Mysuru", 54, 190), ("Mangaluru", 48, 150), ("Hubballi", 42, 110), ("Belagavi", 36, 80)],
+        "Tamil Nadu": [("Chennai", 84, 490), ("Coimbatore", 60, 240), ("Madurai", 50, 160), ("Salem", 42, 110), ("Tiruchirappalli", 38, 85)],
+        "Telangana": [("Hyderabad", 86, 520), ("Secunderabad", 68, 240), ("Warangal", 52, 170), ("Nizamabad", 44, 130), ("Karimnagar", 38, 95)],
+        "Uttar Pradesh": [("Noida", 86, 480), ("Lucknow", 78, 410), ("Kanpur", 68, 310), ("Varanasi", 55, 210), ("Agra", 48, 170)],
+        "West Bengal": [("Kolkata", 85, 510), ("Howrah", 64, 260), ("Siliguri", 52, 180), ("Asansol", 45, 130), ("Durgapur", 39, 95)],
+        "Rajasthan": [("Jaipur", 78, 380), ("Jodhpur", 60, 220), ("Kota", 52, 160), ("Udaipur", 46, 130), ("Ajmer", 40, 90)],
+        "Punjab": [("Ludhiana", 74, 320), ("Mohali", 68, 240), ("Amritsar", 62, 230), ("Jalandhar", 54, 180), ("Patiala", 44, 110)],
+        "Haryana": [("Gurugram", 86, 440), ("Faridabad", 70, 280), ("Panipat", 52, 160), ("Ambala", 45, 120), ("Karnal", 40, 95)],
+        "Bihar": [("Patna", 76, 360), ("Gaya", 54, 190), ("Muzaffarpur", 48, 150), ("Bhagalpur", 42, 120), ("Darbhanga", 36, 85)],
+        "Madhya Pradesh": [("Indore", 78, 370), ("Bhopal", 72, 310), ("Gwalior", 54, 180), ("Jabalpur", 48, 140), ("Ujjain", 40, 95)],
+        "Kerala": [("Kochi", 76, 340), ("Thiruvananthapuram", 65, 260), ("Kozhikode", 52, 180), ("Thrissur", 44, 130), ("Kollam", 38, 90)],
+        "Odisha": [("Bhubaneswar", 72, 290), ("Cuttack", 58, 200), ("Rourkela", 46, 140), ("Puri", 38, 90), ("Sambalpur", 35, 75)],
+        "Andhra Pradesh": [("Visakhapatnam", 75, 310), ("Vijayawada", 64, 240), ("Guntur", 52, 170), ("Tirupati", 44, 120), ("Kurnool", 38, 85)],
+        "Goa": [("Panaji", 62, 140), ("Margao", 52, 110), ("Vasco da Gama", 44, 80), ("Mapusa", 38, 60)],
+        "Jharkhand": [("Ranchi", 74, 280), ("Dhanbad", 65, 230), ("Jamshedpur", 58, 190), ("Deoghar", 50, 140), ("Bokaro", 42, 100)],
+        "Assam": [("Guwahati", 72, 270), ("Silchar", 50, 150), ("Dibrugarh", 45, 120), ("Jorhat", 38, 90)],
+    }
 
-    # Filter city by state if specified
-    if state == "Gujarat":
-        city_risks = [c for c in all_city_risks if c["city"] in ["Ahmedabad", "Vadodara", "Surat", "Rajkot"]]
-    elif state == "Maharashtra":
-        city_risks = [c for c in all_city_risks if c["city"] in ["Mumbai"]]
-    elif state == "Delhi NCR":
-        city_risks = [c for c in all_city_risks if c["city"] in ["Delhi"]]
+    if state in state_cities_db:
+        city_tuples = state_cities_db[state]
+    elif state == "All India":
+        city_tuples = [
+            ("Delhi", 88, 580),
+            ("Mumbai", 85, 540),
+            ("Bengaluru", 82, 520),
+            ("Ahmedabad", 80, 420),
+            ("Hyderabad", 78, 410),
+            ("Kolkata", 76, 380),
+            ("Noida", 74, 320),
+        ]
     else:
-        city_risks = all_city_risks
+        city_tuples = [
+            (f"{state} Central", 72, 240),
+            (f"{state} North", 58, 180),
+            (f"{state} South", 48, 120),
+            (f"{state} East", 42, 90),
+        ]
+
+    city_risks = []
+    for c_name, c_risk, c_cases in city_tuples:
+        scaled_cases = max(5, int(c_cases * scale * fr_mult))
+        c_color = "#EF4444" if c_risk >= 75 else "#F97316" if c_risk >= 60 else "#3B82F6"
+        city_risks.append({"city": c_name, "risk": c_risk, "cases": scaled_cases, "color": c_color})
 
     # 6. Live Time Window
+    peak_offset = 12 if "UPI" in fraud_type or "Phishing" in fraud_type else 0
     time_windows = [
         {"slot": "08-10 AM", "probability": 28},
-        {"slot": "10-12 PM", "probability": 64},
-        {"slot": "12-02 PM", "probability": 88},
+        {"slot": "10-12 PM", "probability": min(95, 64 + peak_offset)},
+        {"slot": "12-02 PM", "probability": min(98, 88 + peak_offset // 2)},
         {"slot": "02-04 PM", "probability": 72},
         {"slot": "04-06 PM", "probability": 42},
         {"slot": "06-08 PM", "probability": 18},

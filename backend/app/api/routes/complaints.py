@@ -43,6 +43,12 @@ def register_complaint(
     db: Session = Depends(get_db),
     current_user: UserPrincipal = Depends(get_current_principal),
 ):
+    if current_user.role != "investigator":
+        raise HTTPException(
+            status_code=403,
+            detail=f"Field Investigating Officer (Investigator) role required to register initial complaints. Role '{current_user.role}' has review/archival access only.",
+        )
+
     existing = get_complaint_by_id(db, data.complaint_id)
     if existing:
         raise HTTPException(status_code=400, detail=f"Case with ID {data.complaint_id} already exists")
@@ -82,6 +88,21 @@ def modify_complaint(
     if not complaint:
         raise HTTPException(status_code=404, detail="Complaint record not found")
 
+    # Only Senior Officers can assign/reassign cases or approve final closure
+    if data.assigned_officer_id is not None and data.assigned_officer_id != complaint.assigned_officer_id:
+        if current_user.role != "senior_officer":
+            raise HTTPException(
+                status_code=403,
+                detail=f"Only Supervisory Command (Senior Officer) can assign or reassign investigating officers.",
+            )
+
+    if data.status and data.status.lower() in ["closed", "resolved"]:
+        if current_user.role != "senior_officer":
+            raise HTTPException(
+                status_code=403,
+                detail=f"Only Supervisory Command (Senior Officer) can approve case closure.",
+            )
+
     old_status = complaint.status
     complaint = update_complaint(db, complaint, data)
     log_audit_event(
@@ -102,6 +123,12 @@ async def import_transactions_file(
     db: Session = Depends(get_db),
     current_user: UserPrincipal = Depends(get_current_principal),
 ):
+    if current_user.role != "investigator":
+        raise HTTPException(
+            status_code=403,
+            detail=f"Operational transaction ledger importing is restricted to Investigating Officers (Investigator).",
+        )
+
     complaint = get_complaint_by_id(db, complaint_id)
     if not complaint:
         raise HTTPException(status_code=404, detail="Complaint record not found")

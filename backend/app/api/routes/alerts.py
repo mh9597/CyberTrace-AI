@@ -40,6 +40,15 @@ def update_alert_review(
     if not alert:
         raise HTTPException(status_code=404, detail="Alert record not found")
 
+    # High-risk actions and officer assignment require supervisory authority (Senior Officer)
+    supervisory_statuses = ["Freeze Order", "Action Taken", "Closed", "Resolved", "Authorized", "Escalated"]
+    if data.assigned_officer_name or (data.review_status and data.review_status in supervisory_statuses):
+        if current_user.role not in ["senior_officer"]:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Supervisory Command authority (Senior Officer) required for '{data.review_status or 'Officer Assignment'}'. Role '{current_user.role}' cannot authorize operational escalations.",
+            )
+
     updated = update_alert(db, alert, data)
     log_audit_event(
         db=db,

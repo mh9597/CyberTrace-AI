@@ -125,3 +125,17 @@ body {
 .animate-beacon {
   animation: beacon-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Print Media Optimization: Prevent 3-Page Duplicate Printing of Modals & Fixed Overlays */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  /* Prevent repeating fixed modal backdrops across every printed page */
+  .fixed {
+    position: static !important;
+  }
+}
+

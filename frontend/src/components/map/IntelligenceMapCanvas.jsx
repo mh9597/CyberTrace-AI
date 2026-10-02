@@ -12,37 +12,9 @@ import {
   Compass,
 } from 'lucide-react';
 
-export const REGION_COORDINATES = {
-  // Gujarat
-  Gujarat: { lat: 23.0225, lng: 72.5714, zoom: 8 },
-  Ahmedabad: { lat: 23.0300, lng: 72.5178, zoom: 13 },
-  Surat: { lat: 21.1702, lng: 72.8311, zoom: 13 },
-  Vadodara: { lat: 22.3107, lng: 73.1812, zoom: 13 },
-  Rajkot: { lat: 22.2887, lng: 70.7788, zoom: 13 },
-  Gandhinagar: { lat: 23.2156, lng: 72.6369, zoom: 13 },
+import { ALL_REGION_COORDINATES, generateHotspotsForState, generateAtmsForDistrict } from '../../data/indiaGeodata';
 
-  // Maharashtra
-  Maharashtra: { lat: 19.7515, lng: 75.7139, zoom: 7 },
-  Mumbai: { lat: 19.0760, lng: 72.8777, zoom: 12 },
-  Pune: { lat: 18.5204, lng: 73.8567, zoom: 12 },
-  Nagpur: { lat: 21.1458, lng: 79.0882, zoom: 12 },
-  Thane: { lat: 19.2183, lng: 72.9781, zoom: 13 },
-  Nashik: { lat: 19.9975, lng: 73.7898, zoom: 12 },
-
-  // Rajasthan
-  Rajasthan: { lat: 27.0238, lng: 74.2179, zoom: 7 },
-  Jaipur: { lat: 26.9124, lng: 75.7873, zoom: 12 },
-  Jodhpur: { lat: 26.2389, lng: 73.0243, zoom: 12 },
-  Udaipur: { lat: 24.5854, lng: 73.7125, zoom: 12 },
-  Kota: { lat: 25.2138, lng: 75.8648, zoom: 12 },
-
-  // Delhi NCR
-  'Delhi NCR': { lat: 28.6139, lng: 77.2090, zoom: 10 },
-  'New Delhi': { lat: 28.6139, lng: 77.2090, zoom: 13 },
-  Gurugram: { lat: 28.4595, lng: 77.0266, zoom: 13 },
-  Noida: { lat: 28.5355, lng: 77.3910, zoom: 13 },
-  'South Delhi': { lat: 28.5244, lng: 77.1855, zoom: 13 },
-};
+export const REGION_COORDINATES = ALL_REGION_COORDINATES;
 
 export const HOTSPOTS = [
   // Gujarat
@@ -400,6 +372,12 @@ export default function IntelligenceMapCanvas({
   const visibleHotspots = useMemo(() => {
     let list = HOTSPOTS;
 
+    // If current selected district or state has specific hotspots, prioritize or augment them
+    const hasSpecific = list.some((s) => s.district === selectedDistrict || s.state === selectedState);
+    if (!hasSpecific && (selectedState || selectedDistrict)) {
+      list = [...list, ...generateHotspotsForState(selectedState, selectedDistrict)];
+    }
+
     // Filter by risk
     if (selectedRisk && selectedRisk !== 'All Levels') {
       if (selectedRisk.includes('High') || selectedRisk.includes('Critical')) {
@@ -412,13 +390,19 @@ export default function IntelligenceMapCanvas({
     }
 
     return list;
-  }, [selectedRisk]);
+  }, [selectedRisk, selectedState, selectedDistrict]);
 
   // Filter auxiliary points by region when possible
   const visibleAtms = useMemo(() => {
     const matched = ATM_POINTS.filter((p) => p.district === selectedDistrict);
-    return matched.length > 0 ? matched : ATM_POINTS;
-  }, [selectedDistrict]);
+    if (matched.length > 0) return matched;
+
+    const coords = ALL_REGION_COORDINATES[selectedDistrict] || ALL_REGION_COORDINATES[selectedState];
+    if (coords && selectedDistrict) {
+      return generateAtmsForDistrict(selectedDistrict, coords.lat, coords.lng);
+    }
+    return ATM_POINTS;
+  }, [selectedDistrict, selectedState]);
 
   const visibleHistorical = useMemo(() => {
     const matched = HISTORICAL_POINTS.filter((p) => p.district === selectedDistrict);

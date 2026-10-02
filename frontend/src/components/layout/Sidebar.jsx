@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
 const NAV_SECTIONS = [
@@ -82,11 +83,24 @@ const NAV_SECTIONS = [
 
 export default function Sidebar() {
   const location = useLocation();
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     activeThreats: 3,
     riskScore: 84,
     nodeStatus: 'ONLINE',
   });
+
+  const visibleSections = useMemo(() => {
+    return NAV_SECTIONS.map((sec) => ({
+      ...sec,
+      items: sec.items.filter((item) => {
+        if (item.href === '/security' && (!user?.role || user?.role === 'investigator')) {
+          return false;
+        }
+        return true;
+      }),
+    })).filter((sec) => sec.items.length > 0);
+  }, [user?.role]);
 
   useEffect(() => {
     // Check live alerts count if available
@@ -112,7 +126,7 @@ export default function Sidebar() {
     <aside className="w-64 bg-white dark:bg-slate-950 border-r border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between py-4 shrink-0 select-none z-30 transition-colors duration-200 shadow-xs">
       {/* Navigation Sections */}
       <div className="flex-1 overflow-y-auto px-3 space-y-5 custom-scrollbar">
-        {NAV_SECTIONS.map((section, idx) => (
+        {visibleSections.map((section, idx) => (
           <div key={idx} className="space-y-1.5">
             {/* Section Header */}
             <div className="px-3 text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 font-mono uppercase">

@@ -8,7 +8,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('cybertrace_token');
+  const token = sessionStorage.getItem('cybertrace_token') || localStorage.getItem('cybertrace_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -19,8 +19,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Auto-fallback or redirect to login if session expires
-      if (window.location.pathname !== '/login') {
+      const isAuthEndpoint = error.config?.url?.includes('/auth/');
+      if (!isAuthEndpoint && window.location.pathname !== '/login' && window.location.pathname !== '/') {
+        sessionStorage.removeItem('cybertrace_token');
+        sessionStorage.removeItem('cybertrace_user');
         localStorage.removeItem('cybertrace_token');
         localStorage.removeItem('cybertrace_user');
       }

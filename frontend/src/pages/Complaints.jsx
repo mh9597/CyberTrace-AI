@@ -28,8 +28,13 @@ import {
   Share2,
   Paperclip,
   Check,
+  UserCheck,
+  ChevronDown,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useCaseModal } from '../components/layout/Layout';
+import { useAuth } from '../context/AuthContext';
+import { can, PERMISSIONS } from '../utils/permissions';
 
 // Enhanced realistic sample complaints data
 const INITIAL_COMPLAINTS = [
@@ -40,7 +45,7 @@ const INITIAL_COMPLAINTS = [
     email: 'rajesh.patel@gmail.com',
     aadhaar: 'XXXX-XXXX-8921',
     fraudType: 'Investment Scam',
-    amount: '₹8,00,000',
+    amount: 'Rs.8,00,000',
     amountRaw: 800000,
     city: 'Ahmedabad',
     state: 'Gujarat',
@@ -57,7 +62,7 @@ const INITIAL_COMPLAINTS = [
     riskColor: 'bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-400 border-red-200 dark:border-red-900',
     assignedOfficer: 'Inspector Raj',
     evidenceCount: 3,
-    summary: 'Victim lured into fictitious WhatsApp stock trading group guaranteeing 35% weekly returns. Transferred ₹8,00,000 across 3 mule accounts.',
+    summary: 'Victim lured into fictitious WhatsApp stock trading group guaranteeing 35% weekly returns. Transferred Rs.8,00,000 across 3 mule accounts.',
   },
   {
     id: 'CT-2026-001',
@@ -66,7 +71,7 @@ const INITIAL_COMPLAINTS = [
     email: 'priya.sharma@outlook.com',
     aadhaar: 'XXXX-XXXX-3419',
     fraudType: 'UPI Fraud',
-    amount: '₹4,50,000',
+    amount: 'Rs.4,50,000',
     amountRaw: 450000,
     city: 'Vadodara',
     state: 'Gujarat',
@@ -92,7 +97,7 @@ const INITIAL_COMPLAINTS = [
     email: 'vikram.merchant@bombaycorp.in',
     aadhaar: 'XXXX-XXXX-6192',
     fraudType: 'Phishing Ring',
-    amount: '₹12,40,000',
+    amount: 'Rs.12,40,000',
     amountRaw: 1240000,
     city: 'Mumbai',
     state: 'Maharashtra',
@@ -118,7 +123,7 @@ const INITIAL_COMPLAINTS = [
     email: 'ananya.desai@gmail.com',
     aadhaar: 'XXXX-XXXX-5510',
     fraudType: 'Fake Job / Loan',
-    amount: '₹3,20,000',
+    amount: 'Rs.3,20,000',
     amountRaw: 320000,
     city: 'Surat',
     state: 'Gujarat',
@@ -144,7 +149,7 @@ const INITIAL_COMPLAINTS = [
     email: 'amit.joshi@delhinet.org',
     aadhaar: 'XXXX-XXXX-1940',
     fraudType: 'Investment Scam',
-    amount: '₹18,50,000',
+    amount: 'Rs.18,50,000',
     amountRaw: 1850000,
     city: 'Delhi',
     state: 'Delhi NCR',
@@ -170,7 +175,7 @@ const INITIAL_COMPLAINTS = [
     email: 'kavita.menon@keralatrust.in',
     aadhaar: 'XXXX-XXXX-7729',
     fraudType: 'UPI Fraud',
-    amount: '₹1,80,000',
+    amount: 'Rs.1,80,000',
     amountRaw: 180000,
     city: 'Rajkot',
     state: 'Gujarat',
@@ -209,6 +214,10 @@ const STATUS_FILTERS = [
 
 export default function Complaints() {
   const { openCaseModal } = useCaseModal();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const canAuthorizeHighRisk = can(user, PERMISSIONS.AUTHORIZE_HIGH_RISK_ACTION);
+  const canAssignIO = can(user, PERMISSIONS.ASSIGN_IO);
 
   const [complaints, setComplaints] = useState(INITIAL_COMPLAINTS);
   const [searchTerm, setSearchTerm] = useState('');
@@ -218,6 +227,7 @@ export default function Complaints() {
   const [quickViewCase, setQuickViewCase] = useState(null);
   const [showNewModal, setShowNewModal] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+  const [showAssignDropdown, setShowAssignDropdown] = useState(false);
 
   // New Complaint Form State
   const [formData, setFormData] = useState({
@@ -264,7 +274,7 @@ export default function Complaints() {
     if (!formData.complainant || !formData.amount) return;
 
     const rawAmt = parseFloat(formData.amount.replace(/[^0-9.]/g, '')) || 500000;
-    const formattedAmt = `₹${rawAmt.toLocaleString('en-IN')}`;
+    const formattedAmt = `Rs.${rawAmt.toLocaleString('en-IN')}`;
 
     const newId = `CT-2026-0${complaints.length + 3}`;
     const newEntry = {
@@ -318,6 +328,10 @@ export default function Complaints() {
 
   const handleFreezeAction = (caseId, e) => {
     e.stopPropagation();
+    if (!canAuthorizeHighRisk) {
+      showToast(`Field IO: Freeze requisitions submitted to Supervisory Command for authorization.`);
+      return;
+    }
     setComplaints((prev) =>
       prev.map((c) =>
         c.id === caseId
@@ -337,6 +351,21 @@ export default function Complaints() {
         statusColor: 'bg-cyan-50 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
       }));
     }
+  };
+
+  const handleAssignOfficerToCase = (officerName) => {
+    if (!quickViewCase) return;
+    const caseId = quickViewCase.id;
+    setComplaints((prev) =>
+      prev.map((c) =>
+        c.id === caseId
+          ? { ...c, assignedOfficer: officerName }
+          : c
+      )
+    );
+    setQuickViewCase((prev) => ({ ...prev, assignedOfficer: officerName }));
+    setShowAssignDropdown(false);
+    showToast(`Case ${caseId} assigned to ${officerName}`);
   };
 
   return (
@@ -392,14 +421,21 @@ export default function Complaints() {
             </button>
           </div>
 
-          {/* Register New Complaint Button */}
-          <button
-            onClick={() => setShowNewModal(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs hover:shadow-md transition cursor-pointer active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Register New Complaint</span>
-          </button>
+          {/* Register New Complaint Button (Investigator Only as per Authority Matrix) */}
+          {can(user, PERMISSIONS.CREATE_COMPLAINT) ? (
+            <button
+              onClick={() => setShowNewModal(true)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs hover:shadow-md transition cursor-pointer active:scale-95"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Register New Complaint</span>
+            </button>
+          ) : (
+            <div className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 flex items-center gap-1.5">
+              <span>{user?.role === 'senior_officer' ? 'Supervisory Case Review' : 'Archival Dossier View'}</span>
+            </div>
+          )}
+
         </div>
       </div>
 
@@ -463,7 +499,7 @@ export default function Complaints() {
           {filteredComplaints.map((item) => (
             <div
               key={item.id}
-              onClick={() => setQuickViewCase(item)}
+              onClick={() => navigate(`/complaints/${item.id}`)}
               className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800/80 p-5 shadow-2xs hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden"
             >
               {/* Top Accent Ribbon */}
@@ -545,15 +581,15 @@ export default function Complaints() {
                     <button
                       onClick={(e) => handleFreezeAction(item.id, e)}
                       className="px-2.5 py-1 rounded-lg bg-red-50 dark:bg-red-950/60 hover:bg-red-100 text-red-600 dark:text-red-400 text-[11px] font-semibold border border-red-200 dark:border-red-900 transition"
-                      title="Freeze Mule Bank Account"
+                      title={canAuthorizeHighRisk ? "Freeze Mule Bank Account" : "Submit Freeze Requisition for Supervisory Authorization"}
                     >
-                      Freeze
+                      {canAuthorizeHighRisk ? 'Freeze' : 'Req. Freeze'}
                     </button>
                   )}
                   <button
-                    onClick={() => setQuickViewCase(item)}
+                    onClick={() => navigate(`/complaints/${item.id}`)}
                     className="p-1 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 transition"
-                    title="Quick Dossier View"
+                    title="Open Full Case Dossier"
                   >
                     <Eye className="w-4 h-4" />
                   </button>
@@ -583,7 +619,7 @@ export default function Complaints() {
                 {filteredComplaints.map((c) => (
                   <tr
                     key={c.id}
-                    onClick={() => setQuickViewCase(c)}
+                    onClick={() => navigate(`/complaints/${c.id}`)}
                     className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 cursor-pointer transition"
                   >
                     <td className="py-3.5 px-4 font-mono font-bold text-blue-600 dark:text-blue-400">
@@ -619,14 +655,14 @@ export default function Complaints() {
                         <button
                           onClick={(e) => handleFreezeAction(c.id, e)}
                           className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-red-50 hover:text-red-600 text-[10px] font-semibold transition"
-                          title="Freeze"
+                          title={canAuthorizeHighRisk ? "Freeze" : "Request Freeze"}
                         >
-                          Freeze
+                          {canAuthorizeHighRisk ? 'Freeze' : 'Req.'}
                         </button>
                         <button
-                          onClick={() => setQuickViewCase(c)}
+                          onClick={(e) => { e.stopPropagation(); navigate(`/complaints/${c.id}`); }}
                           className="p-1 rounded text-slate-400 hover:text-blue-600 transition"
-                          title="View"
+                          title="Open Full Case Dossier"
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
@@ -636,160 +672,6 @@ export default function Complaints() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </div>
-      )}
-
-      {/* Quick View Slide-out Drawer */}
-      {quickViewCase && (
-        <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/50 backdrop-blur-xs flex justify-end animate-in fade-in duration-150">
-          <div
-            className="w-full max-w-xl bg-white dark:bg-slate-900 h-full shadow-2xl border-l border-slate-200 dark:border-slate-800 flex flex-col justify-between overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Drawer Header */}
-            <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-10">
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900">
-                  {quickViewCase.id}
-                </span>
-                <div>
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-                    {quickViewCase.complainant}
-                  </h3>
-                  <p className="text-xs text-slate-400">{quickViewCase.fraudType} &bull; {quickViewCase.city}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setQuickViewCase(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Drawer Body Dossier */}
-            <div className="p-5 space-y-5 text-xs">
-              {/* Financial & Status Hero Card */}
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent border border-blue-200/60 dark:border-blue-900/60 flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Disputed Amount</span>
-                  <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
-                    {quickViewCase.amount}
-                  </div>
-                  <span className="text-[10px] text-slate-400 font-mono">UTR: {quickViewCase.utr}</span>
-                </div>
-                <div className="text-right space-y-1">
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full border inline-block ${quickViewCase.riskColor}`}>
-                    {quickViewCase.riskScore}% {quickViewCase.riskLevel} Risk
-                  </span>
-                  <div className="text-[10px] text-slate-400 font-medium">
-                    Assigned: {quickViewCase.assignedOfficer}
-                  </div>
-                </div>
-              </div>
-
-              {/* Case Narrative */}
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono mb-2">
-                  Incident Narrative
-                </h4>
-                <p className="text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60 leading-relaxed">
-                  {quickViewCase.summary}
-                </p>
-              </div>
-
-              {/* Victim Contact Info */}
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono mb-2">
-                  Complainant Identity
-                </h4>
-                <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-                  <div>
-                    <span className="text-[10px] text-slate-400 block font-medium">Mobile Number</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">{quickViewCase.phone}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 block font-medium">Email Address</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">{quickViewCase.email}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 block font-medium">Aadhaar (Masked)</span>
-                    <span className="font-semibold font-mono text-slate-800 dark:text-slate-200">{quickViewCase.aadhaar}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 block font-medium">Jurisdiction</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">{quickViewCase.city}, {quickViewCase.state}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Suspect Mule Bank Trail */}
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono mb-2">
-                  Suspect Mule Route
-                </h4>
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-slate-400 block">Victim Bank</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">{quickViewCase.bank}</span>
-                    </div>
-                    <span className="text-slate-400 font-mono text-base">&rarr;</span>
-                    <div className="text-right">
-                      <span className="text-[10px] text-red-500 font-bold block">Suspect Destination</span>
-                      <span className="font-bold text-red-600 dark:text-red-400">{quickViewCase.suspectBank}</span>
-                    </div>
-                  </div>
-                  <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200/60 dark:border-slate-700 flex justify-between">
-                    <span>Mule A/C: {quickViewCase.suspectAccount}</span>
-                    <span className="text-blue-600 dark:text-blue-400 font-semibold cursor-pointer hover:underline" onClick={() => openCaseModal(quickViewCase.id)}>View Network Graph &rarr;</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Evidence Vault */}
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono mb-2">
-                  Verified Evidence Files ({quickViewCase.evidenceCount})
-                </h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center gap-2">
-                    <FileCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <div className="truncate">
-                      <span className="font-semibold block truncate">Bank_Statement.pdf</span>
-                      <span className="text-[10px] text-slate-400 font-mono">1.4 MB • SHA256</span>
-                    </div>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center gap-2">
-                    <Paperclip className="w-4 h-4 text-blue-500 shrink-0" />
-                    <div className="truncate">
-                      <span className="font-semibold block truncate">WhatsApp_Chat.png</span>
-                      <span className="text-[10px] text-slate-400 font-mono">820 KB • Verified</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Drawer Action Bar */}
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950 flex items-center gap-2.5 sticky bottom-0">
-              <button
-                onClick={(e) => handleFreezeAction(quickViewCase.id, e)}
-                disabled={quickViewCase.status === 'Mule Freezed'}
-                className="flex-1 py-2.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white font-semibold text-xs transition cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <Lock className="w-3.5 h-3.5" />
-                <span>{quickViewCase.status === 'Mule Freezed' ? 'Mule Freezed' : 'Freeze Mule Account'}</span>
-              </button>
-              <button
-                onClick={() => showToast(`Dossier for ${quickViewCase.id} exported under Sec 65B!`)}
-                className="py-2.5 px-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-100 transition cursor-pointer flex items-center gap-1.5"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Export Dossier</span>
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -909,7 +791,7 @@ export default function Complaints() {
                   </div>
                   <div>
                     <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
-                      Total Disputed Amount (₹) *
+                      Total Disputed Amount (Rs.) *
                     </label>
                     <input
                       type="text"
@@ -938,6 +820,18 @@ export default function Complaints() {
                       placeholder="e.g. State Bank of India"
                       value={formData.bank}
                       onChange={(e) => setFormData({ ...formData, bank: e.target.value })}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-hidden"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
+                      Suspect Bank & Branch Location *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. ICICI Bank, Alkapuri Branch"
+                      value={formData.suspectBank}
+                      onChange={(e) => setFormData({ ...formData, suspectBank: e.target.value })}
                       className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-hidden"
                     />
                   </div>
