@@ -70,6 +70,53 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleAuthInit = async ({ email, full_name, google_id }) => {
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/google/init', { email, full_name, google_id });
+      if (res.data.status === 'existing_user') {
+        const { access_token, user: userData } = res.data;
+        sessionStorage.setItem('cybertrace_token', access_token);
+        sessionStorage.setItem('cybertrace_user', JSON.stringify(userData));
+        setUser(userData);
+      }
+      return { success: true, data: res.data };
+    } catch (err) {
+      return {
+        success: false,
+        error: err.response?.data?.detail || 'Google sign-in initiation failed. Please try again.',
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const googleCompleteRegistration = async ({ email, full_name, badge_number, role, otp, department }) => {
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/google/complete-registration', {
+        email,
+        full_name,
+        badge_number,
+        role,
+        otp,
+        department,
+      });
+      const { access_token, user: userData } = res.data;
+      sessionStorage.setItem('cybertrace_token', access_token);
+      sessionStorage.setItem('cybertrace_user', JSON.stringify(userData));
+      setUser(userData);
+      return { success: true, data: res.data };
+    } catch (err) {
+      return {
+        success: false,
+        error: err.response?.data?.detail || 'Verification or profile completion failed.',
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateProfile = async (profileData) => {
     setLoading(true);
     try {
@@ -102,7 +149,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, signup, logout, updateProfile, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        login,
+        signup,
+        googleAuthInit,
+        googleCompleteRegistration,
+        logout,
+        updateProfile,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

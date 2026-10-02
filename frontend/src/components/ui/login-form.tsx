@@ -5,6 +5,7 @@ import { ArrowLeft, ShieldCheck } from "lucide-react";
 
 export interface LoginFormProps {
   onSubmit?: (data: { email: string; password: string }) => Promise<void> | void;
+  onGoogleSignIn?: () => void;
   loading?: boolean;
   externalError?: string;
   defaultEmail?: string;
@@ -18,6 +19,7 @@ export interface LoginFormProps {
 
 export default function Example({
   onSubmit,
+  onGoogleSignIn,
   loading = false,
   externalError = "",
   defaultEmail = "",
@@ -101,7 +103,13 @@ export default function Example({
           {/* Social Sign-in Option */}
           <button
             type="button"
-            onClick={() => alert("Google SSO Integration active for Gov domains.")}
+            onClick={() => {
+              if (onGoogleSignIn) {
+                onGoogleSignIn();
+              } else {
+                alert("Google SSO Integration active for Gov domains.");
+              }
+            }}
             className="w-full mt-6 bg-white hover:bg-gray-50 transition-all flex items-center justify-center gap-3 h-12 rounded-full border border-gray-200 shadow-xs hover:border-gray-300 group cursor-pointer"
           >
             <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">

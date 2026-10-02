@@ -32,6 +32,14 @@ class Settings(BaseSettings):
         "http://localhost:3000",
     ]
 
+    # SMTP Email Verification Settings
+    SMTP_SERVER: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = "no-reply@cybertrace.gov.in"
+    SMTP_ENABLED: bool = False
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def normalize_database_url(cls, v: str) -> str:

@@ -94,3 +94,33 @@ CyberTrace-AI/
 ├── docker-compose.yml           # Multi-container PostgreSQL PostGIS deployment
 └── CyberTrace_AI_Project_Blueprint.md
 ```
+
+---
+
+## 🔐 Google OAuth 2.0 & SMTP Email Verification
+
+CyberTrace AI supports native Google Sign-In with device account selection and 2FA SMTP email verification for newly onboarding law enforcement personnel.
+
+### 1. Google OAuth Setup
+1. Create OAuth credentials in the [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
+2. Set application type to **Web application**.
+3. Add `http://localhost:5173` under **Authorized JavaScript origins**.
+4. Set in [`frontend/.env`](file:///d:/CyberTrace-AI-main/frontend/.env):
+   ```env
+   VITE_GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
+   ```
+
+### 2. SMTP Verification Setup (Gmail App Password)
+1. Enable 2-Step Verification on your Google Account.
+2. Generate a 16-character App Password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+3. Set in [`.env`](file:///d:/CyberTrace-AI-main/.env):
+   ```env
+   SMTP_ENABLED=True
+   SMTP_SERVER=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your_email@gmail.com
+   SMTP_PASSWORD=your_16_char_app_password
+   SMTP_FROM_EMAIL=your_email@gmail.com
+   ```
+4. New officers signing in with Google receive a 6-digit OTP in their Gmail inbox to verify their identity before activating their badge credentials.
+

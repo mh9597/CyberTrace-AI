@@ -27,7 +27,6 @@ import {
 export default function Landing() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [showDemoVideo, setShowDemoVideo] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
 
@@ -212,11 +211,11 @@ export default function Landing() {
                 </button>
 
                 <button
-                  onClick={() => setShowDemoVideo(true)}
+                  onClick={(e) => scrollToSection(e, 'features')}
                   className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white/90 hover:bg-white text-slate-700 text-xs sm:text-sm font-semibold border border-slate-200 shadow-xs hover:border-slate-300 transition-all backdrop-blur-md"
                 >
-                  <Play className="w-4 h-4 text-blue-600 fill-blue-600" />
-                  <span>Watch Demo</span>
+                  <span>Explore Capabilities</span>
+                  <ChevronRight className="w-4 h-4 text-slate-500" />
                 </button>
               </div>
             </div>
@@ -433,7 +432,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* SCROLLABLE SECTION: SOLUTION ARCHITECTURE */}
+      {/* SCROLLABLE SECTION 3: SOLUTION ARCHITECTURE */}
       <section id="solution" className="py-20 bg-slate-900 text-white relative z-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 pointer-events-none opacity-90" />
         <div className="max-w-7xl mx-auto px-6 sm:px-8 relative z-10">
@@ -609,58 +608,6 @@ export default function Landing() {
           </p>
         </div>
       </footer>
-
-      {/* Demo Walkthrough Modal */}
-      {showDemoVideo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-6 max-w-lg w-full space-y-4 shadow-2xl border border-slate-200">
-            <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">
-                CyberTrace AI Platform Walkthrough
-              </h3>
-              <button
-                onClick={() => setShowDemoVideo(false)}
-                className="text-slate-400 hover:text-slate-700"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="aspect-video bg-slate-950 rounded-xl flex items-center justify-center text-white text-center p-6 relative overflow-hidden">
-              <img
-                src="/images/landing-bg.png"
-                alt="Walkthrough"
-                className="absolute inset-0 w-full h-full object-cover opacity-25"
-              />
-              <div className="relative z-10 space-y-2">
-                <ShieldAlert className="w-10 h-10 text-blue-500 mx-auto animate-bounce" />
-                <p className="text-xs sm:text-sm font-semibold">
-                  Prediction & Money Trail Demo System Active
-                </p>
-                <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
-                  Explore live cash-out probability models, geospatial heatmaps, and transaction topology.
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                onClick={() => setShowDemoVideo(false)}
-                className="px-4 py-2 rounded-xl text-xs text-slate-600 hover:bg-slate-100 font-medium"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  setShowDemoVideo(false);
-                  handleGetStarted();
-                }}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold"
-              >
-                {user ? 'Enter Dashboard' : 'Get Started'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
