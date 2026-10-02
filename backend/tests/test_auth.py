@@ -152,3 +152,36 @@ def test_logout(investigator_client):
     response = investigator_client.post("/auth/logout")
     assert response.status_code == status.HTTP_200_OK
     assert "Successfully logged out" in response.json()["message"]
+
+
+def test_google_auth_init_and_registration_flow(client):
+    """Test full Google Sign-in onboarding flow: dispatch OTP, complete profile with badge and role."""
+    new_google_email = "new.officer.google@cybertrace.gov.in"
+    
+    # Step 1: Init Google sign-in
+    init_res = client.post("/auth/google/init", json={
+        "email": new_google_email,
+        "full_name": "SI Rakesh Verma",
+    })
+    assert init_res.status_code == status.HTTP_200_OK
+    data = init_res.json()
+    assert data["status"] == "new_google_user"
+    assert data["requires_profile_setup"] is True
+    assert "dev_otp" in data
+    otp = data["dev_otp"]
+
+    # Step 2: Complete profile with ID, Name, Role and SMTP OTP
+    complete_res = client.post("/auth/google/complete-registration", json={
+        "email": new_google_email,
+        "full_name": "SI Rakesh Verma",
+        "badge_number": "POL-DEL-789",
+        "role": "investigator",
+        "otp": otp,
+    })
+    assert complete_res.status_code == status.HTTP_200_OK
+    complete_data = complete_res.json()
+    assert "access_token" in complete_data
+    assert complete_data["user"]["email"] == new_google_email
+    assert complete_data["user"]["role"] == "investigator"
+    assert complete_data["user"]["badge_number"] == "POL-DEL-789"
+

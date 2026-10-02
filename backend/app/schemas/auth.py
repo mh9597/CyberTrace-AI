@@ -39,3 +39,23 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+
+class GoogleAuthInitRequest(BaseModel):
+    email: EmailStr
+    full_name: Optional[str] = "Officer"
+    google_id: Optional[str] = None
+
+
+class GoogleVerifyOtpRequest(BaseModel):
+    email: EmailStr
+    otp: str
+
+
+class GoogleCompleteRegistrationRequest(BaseModel):
+    email: EmailStr
+    full_name: str
+    badge_number: str
+    role: str
+    otp: str
+    department: Optional[str] = None

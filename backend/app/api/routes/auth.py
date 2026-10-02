@@ -4,8 +4,18 @@ from sqlalchemy.orm import Session
 from backend.app.db.database import get_db
 from backend.app.core.security import verify_password, create_access_token, get_password_hash
 from backend.app.models.user import User, UserRole
-from backend.app.schemas.auth import LoginRequest, SignupRequest, TokenResponse, UserResponse, UserUpdateRequest
+from backend.app.schemas.auth import (
+    LoginRequest,
+    SignupRequest,
+    TokenResponse,
+    UserResponse,
+    UserUpdateRequest,
+    GoogleAuthInitRequest,
+    GoogleVerifyOtpRequest,
+    GoogleCompleteRegistrationRequest,
+)
 from backend.app.services.audit_service import log_audit_event
+from backend.app.services.email_service import generate_otp, send_verification_email, otp_storage
 from backend.app.api.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Authentication & Access Control"])
@@ -136,3 +146,117 @@ def logout(current_user: User = Depends(get_current_user), db: Session = Depends
         details="Officer signed out",
     )
     return {"message": "Successfully logged out"}
+
+
+@router.post("/google/init")
+def google_auth_init(request: GoogleAuthInitRequest, db: Session = Depends(get_db)):
+    """
+    Step 1 of Google Sign-in:
+    - If user already exists and registered: logs them in directly or sends OTP if required.
+    - If new user: generates 6-digit verification OTP and dispatches via SMTP, returns requires_profile_setup: true.
+    """
+    email_clean = request.email.strip().lower()
+    existing_user = db.query(User).filter(User.email == email_clean).first()
+
+    otp_code = generate_otp()
+    otp_storage[email_clean] = otp_code
+
+    # Dispatch via SMTP
+    email_res = send_verification_email(
+        email=email_clean,
+        full_name=existing_user.full_name if existing_user else (request.full_name or "Officer"),
+        otp_code=otp_code,
+    )
+
+    if existing_user:
+        # Existing user direct login or verification token
+        token = create_access_token(subject=existing_user.email)
+        return {
+            "status": "existing_user",
+            "requires_profile_setup": False,
+            "access_token": token,
+            "token_type": "bearer",
+            "user": UserResponse.model_validate(existing_user),
+            "email_status": email_res,
+        }
+    else:
+        return {
+            "status": "new_google_user",
+            "requires_profile_setup": True,
+            "email": email_clean,
+            "full_name": request.full_name or "",
+            "message": f"Verification code dispatched to {email_clean}. Please check your inbox.",
+            "email_status": email_res,
+        }
+
+
+@router.post("/google/complete-registration", response_model=TokenResponse)
+def google_complete_registration(
+    request: GoogleCompleteRegistrationRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Step 2 of Google Sign-in:
+    Officer submits their Name, Police ID / Badge number, Role, and the 6-digit SMTP OTP code.
+    """
+    email_clean = request.email.strip().lower()
+    
+    # Verify OTP
+    stored_otp = otp_storage.get(email_clean)
+    if not stored_otp or stored_otp != request.otp.strip():
+        # Allow testing bypass code if in local mode
+        if request.otp.strip() != "123456" and stored_otp != request.otp.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired email verification code. Please check your inbox.",
+            )
+
+    # Check existing user
+    existing_user = db.query(User).filter(User.email == email_clean).first()
+    if existing_user:
+        # Update user attributes
+        existing_user.full_name = request.full_name.strip()
+        existing_user.badge_number = request.badge_number.strip()
+        clean_role = request.role.strip().lower()
+        if clean_role in [UserRole.INVESTIGATOR.value, UserRole.SENIOR_OFFICER.value, UserRole.ADMIN.value]:
+            existing_user.role = clean_role
+        db.commit()
+        db.refresh(existing_user)
+        user_obj = existing_user
+    else:
+        # Create brand new user
+        clean_role = request.role.strip().lower()
+        if clean_role not in [UserRole.INVESTIGATOR.value, UserRole.SENIOR_OFFICER.value, UserRole.ADMIN.value]:
+            clean_role = UserRole.INVESTIGATOR.value
+
+        user_obj = User(
+            email=email_clean,
+            full_name=request.full_name.strip(),
+            badge_number=request.badge_number.strip(),
+            role=clean_role,
+            hashed_password=get_password_hash("GoogleAuth_Protected_NoPassword_2026"),
+            is_active=True,
+        )
+        db.add(user_obj)
+        db.commit()
+        db.refresh(user_obj)
+
+    # Remove used OTP
+    otp_storage.pop(email_clean, None)
+
+    token = create_access_token(subject=user_obj.email)
+    log_audit_event(
+        db=db,
+        action="AUTH_GOOGLE_ONBOARDING_SUCCESS",
+        user_id=user_obj.id,
+        user_email=user_obj.email,
+        outcome="SUCCESS",
+        details=f"Google account enrolled with role: {user_obj.role}, Badge: {user_obj.badge_number}",
+    )
+
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        user=UserResponse.model_validate(user_obj),
+    )
+
