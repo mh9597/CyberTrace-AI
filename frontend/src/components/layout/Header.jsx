@@ -146,48 +146,55 @@ export default function Header({ onSearch }) {
   return (
     <>
       <header className="bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 sticky top-0 z-40 shrink-0 select-none transition-colors duration-200 shadow-2xs">
-        {/* Top Tier: Brand, Global Search, AI Copilot, User Profile */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          {/* Left: Brand Identity */}
+        {/* Top Tier: Brand, Global Command Search, System Status, Quick Actions & Officer Chip */}
+        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
+          {/* Left: Brand Identity & Portal Tag */}
           <div className="flex items-center gap-3 shrink-0">
             <Link to="/dashboard" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-                <ShieldAlert className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-xs shadow-blue-500/25 group-hover:scale-105 transition-transform">
+                <ShieldAlert className="w-4.5 h-4.5 text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
+                <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white leading-none flex items-center gap-1">
                   CyberTrace <span className="text-blue-600 dark:text-blue-400">AI</span>
                 </span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium tracking-wide hidden sm:block">
+                <span className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium tracking-wider uppercase mt-0.5 hidden sm:block">
                   National Cyber Threat Command
                 </span>
               </div>
             </Link>
+
+            <div className="hidden lg:block h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+
+            <div className="hidden lg:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-800/50 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>LE-DSS LIVE</span>
+            </div>
           </div>
 
           {/* Center: Command Palette Trigger Search Box (Desktop) */}
           <div className="flex-1 max-w-md hidden md:block">
             <div
               onClick={() => setIsCommandPaletteOpen(true)}
-              className="relative w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 rounded-xl pl-9 pr-14 py-2 text-xs text-slate-600 dark:text-slate-300 shadow-xs hover:shadow-sm transition-all cursor-pointer flex items-center justify-between"
+              className="relative w-full bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-blue-500/60 dark:hover:border-blue-500/60 rounded-xl pl-9 pr-14 h-9 text-xs text-slate-600 dark:text-slate-300 shadow-2xs hover:shadow-xs transition-all cursor-pointer flex items-center justify-between group"
             >
-              <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <span className="text-slate-500 dark:text-slate-400 font-medium truncate">
+              <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <span className="text-slate-400 dark:text-slate-500 font-normal truncate group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors">
                 Search cases, suspects, ATM clusters...
               </span>
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 font-mono font-bold shadow-2xs">
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800 text-[10px] text-slate-500 dark:text-slate-400 font-mono font-semibold shadow-2xs">
                 <span>Ctrl</span>
                 <span>K</span>
               </div>
             </div>
           </div>
 
-          {/* Right: Quick Actions, Notifications, Theme & Profile */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Right: Quick Actions, Theme, Notifications & Profile Chip */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 transition cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700/60"
               title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
@@ -197,11 +204,11 @@ export default function Header({ onSearch }) {
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 transition cursor-pointer"
+                className="relative w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700/60"
                 title="Notifications"
               >
                 <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-950 animate-pulse" />
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-950 animate-pulse" />
               </button>
 
               {showNotifications && (
@@ -254,7 +261,7 @@ export default function Header({ onSearch }) {
               )}
             </div>
 
-            {/* User Profile Container with Smooth Mouse Hover & Micro-Animations */}
+            {/* Officer Profile Container with Smooth Mouse Hover & Micro-Animations */}
             <div
               className="relative"
               onMouseEnter={handleProfileMouseEnter}
@@ -262,10 +269,11 @@ export default function Header({ onSearch }) {
             >
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all duration-200 cursor-pointer border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80 group"
+                className="flex items-center gap-2 pl-1.5 pr-2.5 h-9 rounded-xl border border-slate-200/90 dark:border-slate-800/90 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-slate-100/90 dark:hover:bg-slate-800/80 transition-all duration-150 cursor-pointer shadow-2xs group"
               >
-                <div className="relative">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white font-extrabold text-xs flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 group-hover:shadow-blue-500/30 transition-all duration-200">
+                {/* Avatar */}
+                <div className="relative shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white font-extrabold text-[11px] flex items-center justify-center shadow-xs">
                     {user?.full_name
                       ? user.full_name
                           .split(' ')
@@ -276,35 +284,36 @@ export default function Header({ onSearch }) {
                           .toUpperCase()
                       : 'IR'}
                   </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-950 rounded-full" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-500 border-2 border-white dark:border-slate-950 rounded-full" />
                 </div>
 
+                {/* Name & Role Text */}
                 <div className="text-left hidden lg:block leading-tight">
-                  <div className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate max-w-[120px] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate max-w-[130px] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     {user?.full_name || 'Inspector Raj'}
                   </div>
-                  <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium capitalize flex items-center gap-1">
-                    <span>{user?.role ? user.role.replace('_', ' ') : 'Investigator'}</span>
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium capitalize">
+                    {user?.role ? user.role.replace('_', ' ') : 'Investigator'}
                   </div>
                 </div>
 
                 {/* Role Badge Indicator */}
                 {user?.role === 'senior_officer' && (
-                  <span className="hidden xl:inline-flex items-center gap-1 font-extrabold text-[9px] tracking-wide px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                  <span className="hidden xl:inline-flex items-center gap-1 font-extrabold text-[9px] tracking-wide px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/80">
                     <ShieldCheck className="w-2.5 h-2.5 text-purple-600" />
-                    SUPERVISORY COMMAND
+                    COMMAND
                   </span>
                 )}
                 {user?.role === 'admin' && (
-                  <span className="hidden xl:inline-flex items-center gap-1 font-extrabold text-[9px] tracking-wide px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  <span className="hidden xl:inline-flex items-center gap-1 font-extrabold text-[9px] tracking-wide px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80">
                     <Lock className="w-2.5 h-2.5 text-emerald-600" />
-                    PLATFORM ADMINISTRATOR
+                    ADMIN
                   </span>
                 )}
                 {(!user?.role || user?.role === 'investigator') && (
-                  <span className="hidden xl:inline-flex items-center gap-1 font-extrabold text-[9px] tracking-wide px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                  <span className="hidden xl:inline-flex items-center gap-1 font-extrabold text-[9px] tracking-wide px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80">
                     <Shield className="w-2.5 h-2.5 text-blue-600" />
-                    IO • CYBER CRIME
+                    IO • CYBER
                   </span>
                 )}
 
@@ -401,10 +410,11 @@ export default function Header({ onSearch }) {
           </div>
         </div>
 
-        {/* Lower Tier: Horizontal Navigation Bar (Desktop & Tablets) */}
-        <div className="hidden md:block border-t border-slate-200/60 dark:border-slate-800/60 bg-slate-50/70 dark:bg-slate-950/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <nav className="flex items-center space-x-1 py-1.5 overflow-x-auto no-scrollbar">
+        {/* Lower Tier: Horizontal Navigation Tabs & Real-Time Operational Telemetry */}
+        <div className="hidden md:block border-t border-slate-200/70 dark:border-slate-800/70 bg-slate-50/40 dark:bg-slate-950/40">
+          <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            {/* Primary Navigation Tabs */}
+            <nav className="flex items-center gap-1 py-1.5 overflow-x-auto no-scrollbar">
               {visibleNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;
@@ -414,10 +424,10 @@ export default function Header({ onSearch }) {
                     key={item.name}
                     to={item.href}
                     className={({ isActive: active }) =>
-                      `flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 shrink-0 select-none ${
+                      `flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all duration-150 shrink-0 select-none ${
                         active
-                          ? 'bg-blue-600 text-white font-semibold shadow-xs shadow-blue-500/20'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-900'
+                          ? 'bg-blue-600 text-white font-semibold shadow-xs shadow-blue-500/25 ring-1 ring-blue-600'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-900 font-medium'
                       }`
                     }
                   >
@@ -425,7 +435,7 @@ export default function Header({ onSearch }) {
                       <>
                         <Icon
                           className={`w-3.5 h-3.5 ${
-                            active ? 'text-white' : 'text-slate-500 dark:text-slate-400'
+                            active ? 'text-white' : 'text-slate-400 dark:text-slate-500'
                           }`}
                         />
                         <span>{item.name}</span>
@@ -436,8 +446,8 @@ export default function Header({ onSearch }) {
                               active
                                 ? 'bg-white/20 text-white'
                                 : item.badgeColor === 'rose'
-                                ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300'
-                                : 'bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300'
+                                ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
+                                : 'bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900'
                             }`}
                           >
                             {item.badge}
@@ -449,6 +459,16 @@ export default function Header({ onSearch }) {
                 );
               })}
             </nav>
+
+            {/* Right Telemetry Widget: Balances visual structure & shows real-time system state */}
+            <div className="hidden xl:flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 shrink-0 font-medium py-1">
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-[10.5px] shadow-2xs">
+                <Radio className="w-3 h-3 text-emerald-500 animate-pulse" />
+                <span className="font-semibold text-slate-700 dark:text-slate-300">National Grid Active</span>
+                <span className="text-slate-300 dark:text-slate-700">•</span>
+                <span className="font-mono text-slate-500 dark:text-slate-400">36 Jurisdictions</span>
+              </div>
+            </div>
           </div>
         </div>
 

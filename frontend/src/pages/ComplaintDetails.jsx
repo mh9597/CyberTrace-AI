@@ -103,7 +103,7 @@ export default function ComplaintDetails() {
   }
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
+    <div className="space-y-5 max-w-[1600px] mx-auto">
       <button onClick={() => navigate('/complaints')} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-300 transition group font-medium">
         <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition" />
         Back to Case Repository
