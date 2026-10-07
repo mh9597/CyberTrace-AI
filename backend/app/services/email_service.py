@@ -19,11 +19,11 @@ def send_verification_email(email: str, full_name: str, otp_code: str, purpose: 
     Falls back gracefully if SMTP is not configured or in test mode.
     """
     if purpose == "forgot_password":
-        subject = f"CyberTrace AI - Password Reset Verification Code: {otp_code}"
+        subject = f"{otp_code} is your CyberTrace AI Password Reset Code"
         headline = "CyberTrace AI • Password Reset"
         desc = "To reset your officer credentials and establish a new access key, enter the 6-digit one-time verification passcode below:"
     else:
-        subject = f"CyberTrace AI - Officer Identity Verification Code: {otp_code}"
+        subject = f"{otp_code} is your CyberTrace AI Officer Verification Code"
         headline = "CyberTrace AI • Identity Verification"
         desc = "To complete your enrollment and activate your Google-linked badge credentials, enter the 6-digit one-time verification passcode below:"
 
@@ -71,7 +71,11 @@ Authorized Law Enforcement Decision Support System
             msg["To"] = email
             msg["Reply-To"] = settings.SMTP_FROM_EMAIL
             msg["Date"] = formatdate(localtime=True)
-            msg["Message-ID"] = make_msgid(domain="cybertrace.ai")
+            sender_domain = settings.SMTP_FROM_EMAIL.split("@")[-1] if "@" in settings.SMTP_FROM_EMAIL else None
+            msg["Message-ID"] = make_msgid(domain=sender_domain)
+            msg["X-Priority"] = "1"
+            msg["Priority"] = "Urgent"
+            msg["Importance"] = "high"
             msg.attach(MIMEText(body_text, "plain"))
             msg.attach(MIMEText(html_content, "html"))
 
@@ -79,7 +83,7 @@ Authorized Law Enforcement Decision Support System
             sent = False
             send_error = None
             try:
-                with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT, timeout=12) as server:
+                with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT, timeout=5) as server:
                     server.starttls()
                     server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
                     refusals = server.send_message(msg)
@@ -90,7 +94,7 @@ Authorized Law Enforcement Decision Support System
             except Exception as e_tls:
                 logger.warning(f"SMTP TLS (port {settings.SMTP_PORT}) failed ({e_tls}). Attempting port 465 SSL fallback...")
                 try:
-                    with smtplib.SMTP_SSL(settings.SMTP_SERVER, 465, timeout=12) as ssl_server:
+                    with smtplib.SMTP_SSL(settings.SMTP_SERVER, 465, timeout=5) as ssl_server:
                         ssl_server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
                         refusals = ssl_server.send_message(msg)
                         if refusals:
