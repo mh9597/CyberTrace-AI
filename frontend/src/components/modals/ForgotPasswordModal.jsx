@@ -26,7 +26,10 @@ export default function ForgotPasswordModal({ isOpen, onClose, initialEmail = ""
 
     setLoading(true);
     try {
-      const res = await api.post("/auth/forgot-password", { email: email.trim().lower() });
+      const res = await api.post("/auth/forgot-password", { email: email.trim().toLowerCase() });
+      if (res.data.dev_otp) {
+        setOtp(res.data.dev_otp);
+      }
       setSuccessMsg(res.data.message || `Verification passcode dispatched to ${email}.`);
       setStep(2);
     } catch (err) {
@@ -56,7 +59,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, initialEmail = ""
     setLoading(true);
     try {
       await api.post("/auth/reset-password", {
-        email: email.trim().lower(),
+        email: email.trim().toLowerCase(),
         otp: otp.trim(),
         new_password: newPassword,
       });

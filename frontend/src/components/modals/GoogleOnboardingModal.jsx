@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ShieldCheck, User, Mail, Hash, Shield, KeyRound, CheckCircle2, ArrowRight } from "lucide-react";
 
 export default function GoogleOnboardingModal({
@@ -9,13 +9,20 @@ export default function GoogleOnboardingModal({
   onSubmit,
   loading = false,
   externalError = "",
+  devOtp = "",
   heroImage = "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80",
 }) {
   const [fullName, setFullName] = useState(initialName || "");
   const [badgeNumber, setBadgeNumber] = useState("CYBER-OFF-882");
   const [role, setRole] = useState("investigator");
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState(devOtp || "");
   const [validationError, setValidationError] = useState("");
+
+  useEffect(() => {
+    if (devOtp) {
+      setOtp(devOtp);
+    }
+  }, [devOtp]);
 
   if (!isOpen) return null;
 
@@ -215,10 +222,20 @@ export default function GoogleOnboardingModal({
                   required
                 />
               </div>
-              <p className="text-[11px] text-gray-500 ml-3 mt-1.5 flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                <span>Security OTP has been sent to <strong className="text-gray-800">{email}</strong>. Check your inbox.</span>
-              </p>
+              {devOtp ? (
+                <p className="text-[11px] text-indigo-700 bg-indigo-50 border border-indigo-200/80 rounded-lg p-2 ml-1 mt-2 flex items-center justify-between gap-1.5">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <span className="inline-block w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                    <span>Host blocked SMTP. Verified OTP auto-filled:</span>
+                  </span>
+                  <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 rounded border border-indigo-200 text-indigo-900">{devOtp}</span>
+                </p>
+              ) : (
+                <p className="text-[11px] text-gray-500 ml-3 mt-1.5 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span>Security OTP has been sent to <strong className="text-gray-800">{email}</strong>. Check your inbox.</span>
+                </p>
+              )}
             </div>
 
             {/* Submit Button - exact purple/blue pill styling from reference */}

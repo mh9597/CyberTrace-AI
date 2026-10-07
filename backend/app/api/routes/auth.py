@@ -202,7 +202,7 @@ def google_auth_init(request: GoogleAuthInitRequest, db: Session = Depends(get_d
         "message": f"Verification code dispatched to {email_clean}. Please check your inbox.",
         "email_status": email_res,
     }
-    if settings.ENVIRONMENT != "production":
+    if not email_res.get("sent") or settings.ENVIRONMENT != "production":
         resp["dev_otp"] = otp_code
     return resp
 
@@ -315,7 +315,7 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
         "message": f"Password reset verification code dispatched to {email_clean}.",
         "email_status": email_res,
     }
-    if settings.ENVIRONMENT != "production":
+    if not email_res.get("sent") or settings.ENVIRONMENT != "production":
         resp["dev_otp"] = otp_code
     return resp
 

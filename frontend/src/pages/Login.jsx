@@ -20,6 +20,7 @@ export default function Login() {
   const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [googleEmail, setGoogleEmail] = useState('');
   const [googleName, setGoogleName] = useState('');
+  const [googleDevOtp, setGoogleDevOtp] = useState('');
   const [googleModalError, setGoogleModalError] = useState('');
 
   // Forgot password modal state
@@ -59,6 +60,7 @@ export default function Login() {
           // New Google user — show onboarding (Name, Badge, Role + SMTP OTP)
           setGoogleEmail(res.data.email);
           setGoogleName(res.data.full_name || profile.name || '');
+          setGoogleDevOtp(res.data.dev_otp || res.data.email_status?.dev_otp || '');
           setGoogleModalError('');
           setShowGoogleModal(true);
         }
@@ -122,6 +124,7 @@ export default function Login() {
         onClose={() => setShowGoogleModal(false)}
         email={googleEmail}
         initialName={googleName}
+        devOtp={googleDevOtp}
         externalError={googleModalError}
         loading={loading}
         onSubmit={handleGoogleCompleteSubmit}
