@@ -75,19 +75,41 @@ Authorized Law Enforcement Decision Support System
             msg.attach(MIMEText(body_text, "plain"))
             msg.attach(MIMEText(html_content, "html"))
 
-            with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT, timeout=12) as server:
-                server.starttls()
-                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-                refusals = server.send_message(msg)
-                if refusals:
-                    logger.warning(f"SMTP rejected recipients: {refusals}")
-                    print(f"[SMTP REJECTED] {email}: {refusals}")
-                    return {"sent": False, "mode": "rejected", "error": str(refusals)}
-            print(f"[SMTP SUCCESS] Dispatched OTP {otp_code} to {email}")
-            logger.info(f"Verification email successfully dispatched to {email}")
-            return {"sent": True, "mode": "smtp"}
+            # First try port 587 (STARTTLS), fallback to port 465 (SSL) if blocked
+            sent = False
+            send_error = None
+            try:
+                with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT, timeout=12) as server:
+                    server.starttls()
+                    server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                    refusals = server.send_message(msg)
+                    if refusals:
+                        send_error = f"SMTP rejected recipients: {refusals}"
+                    else:
+                        sent = True
+            except Exception as e_tls:
+                logger.warning(f"SMTP TLS (port {settings.SMTP_PORT}) failed ({e_tls}). Attempting port 465 SSL fallback...")
+                try:
+                    with smtplib.SMTP_SSL(settings.SMTP_SERVER, 465, timeout=12) as ssl_server:
+                        ssl_server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                        refusals = ssl_server.send_message(msg)
+                        if refusals:
+                            send_error = f"SMTP SSL rejected recipients: {refusals}"
+                        else:
+                            sent = True
+                except Exception as e_ssl:
+                    send_error = f"TLS error: {e_tls} | SSL error: {e_ssl}"
+
+            if sent:
+                print(f"[SMTP SUCCESS] Dispatched OTP {otp_code} to {email}")
+                logger.info(f"Verification email successfully dispatched to {email}")
+                return {"sent": True, "mode": "smtp"}
+            else:
+                print(f"[SMTP ERROR] Failed sending to {email}: {send_error}")
+                logger.warning(f"SMTP dispatch failed: {send_error}. Logging OTP to console.")
+                return {"sent": False, "mode": "fallback", "error": send_error, "dev_otp": otp_code}
         except Exception as e:
-            print(f"[SMTP ERROR] Failed sending to {email}: {e}")
+            print(f"[SMTP ERROR] Exception sending to {email}: {e}")
             logger.warning(f"SMTP dispatch failed: {e}. Logging OTP to console.")
             return {"sent": False, "mode": "fallback", "error": str(e), "dev_otp": otp_code}
     else:

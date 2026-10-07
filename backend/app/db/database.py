@@ -15,11 +15,17 @@ def get_engine():
             db_url = db_url.replace("postgres://", "postgresql://", 1)
 
         is_postgres = "postgresql" in db_url
+        connect_args = {}
+        if is_postgres:
+            connect_args["connect_timeout"] = 15
+            if "sslmode=" not in db_url and "localhost" not in db_url and "127.0.0.1" not in db_url:
+                connect_args["sslmode"] = "require"
+
         engine = create_engine(
             db_url,
             pool_pre_ping=True,
             pool_recycle=300,
-            connect_args={"connect_timeout": 15} if is_postgres else {},
+            connect_args=connect_args,
         )
         # Test connection
         with engine.connect() as conn:

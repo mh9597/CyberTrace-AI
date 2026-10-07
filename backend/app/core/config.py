@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: str = "no-reply@cybertrace.gov.in"
-    SMTP_ENABLED: bool = False
+    SMTP_ENABLED: bool = True
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
